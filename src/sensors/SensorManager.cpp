@@ -72,6 +72,7 @@ void SensorManager::update() {
 		}
 	}
 
+#ifdef SLIMEVR_FIRMWARE
 	statusManager.setStatus(SlimeVR::Status::IMU_ERROR, !allIMUGood);
 
 	if (!networkConnection.isConnected()) {
@@ -119,6 +120,10 @@ void SensorManager::update() {
 #if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
 	networkConnection.endBundle();
 #endif
+
+#else  // !SLIMEVR_FIRMWARE
+	(void)allIMUGood;
+#endif  // SLIMEVR_FIRMWARE
 }
 
 }  // namespace SlimeVR::Sensors

@@ -90,6 +90,7 @@ class SoftFusionSensor : public Sensor {
 	}
 
 	void sendTempIfNeeded() {
+#ifdef SLIMEVR_FIRMWARE
 		uint32_t now = micros();
 		constexpr float maxSendRateHz = 2.0f;
 		constexpr uint32_t sendInterval = 1.0f / maxSendRateHz * 1e6;
@@ -98,6 +99,7 @@ class SoftFusionSensor : public Sensor {
 			m_lastTemperaturePacketSent = now - (elapsed - sendInterval);
 			networkConnection.sendTemperature(sensorId, lastReadTemperature);
 		}
+#endif
 	}
 
 	TemperatureGradientCalculator tempGradientCalculator{[&](float gradient) {
@@ -193,10 +195,12 @@ public:
 			addr,
 			now - m_lastRotationUpdateMillis
 		);
+#ifdef SLIMEVR_FIRMWARE
 		networkConnection.sendSensorError(
 			this->sensorId,
 			static_cast<uint8_t>(PacketErrorCode::WATCHDOG_TIMEOUT)
 		);
+#endif
 	}
 
 	void motionLoop() final {

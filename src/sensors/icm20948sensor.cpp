@@ -53,6 +53,7 @@ void ICM20948Sensor::motionSetup() {
 void ICM20948Sensor::motionLoop() {
 	m_tpsCounter.update();
 #if ENABLE_INSPECTION
+#ifdef SLIMEVR_FIRMWARE
 	{
 		(void)imu.getAGMT();
 
@@ -84,6 +85,7 @@ void ICM20948Sensor::motionLoop() {
 			255
 		);
 	}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 
 	hasdata = false;
@@ -125,6 +127,7 @@ void ICM20948Sensor::sendData() {
 	if (newFusedRotation) {
 		newFusedRotation = false;
 
+#ifdef SLIMEVR_FIRMWARE
 #if (USE_6_AXIS)
 		{
 			networkConnection
@@ -147,6 +150,7 @@ void ICM20948Sensor::sendData() {
 			networkConnection.sendSensorAcceleration(sensorId, acceleration);
 		}
 #endif
+#endif  // SLIMEVR_FIRMWARE
 	}
 }
 
@@ -157,6 +161,7 @@ void ICM20948Sensor::startCalibration(int calibrationType) {
 
 void ICM20948Sensor::startCalibrationAutoSave() {
 #if SAVE_BIAS
+#ifdef SLIMEVR_FIRMWARE
 	globalTimer.in(
 		bias_save_periods[0] * 1000,
 		[](void* arg) -> bool {
@@ -165,6 +170,7 @@ void ICM20948Sensor::startCalibrationAutoSave() {
 		},
 		this
 	);
+#endif  // SLIMEVR_FIRMWARE
 #endif
 }
 
@@ -313,7 +319,9 @@ void ICM20948Sensor::connectSensor() {
 			addr,
 			imu_err
 		);
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(50, 50, 200);
+#endif
 		return;
 	}
 }
@@ -332,10 +340,12 @@ void ICM20948Sensor::checkSensorTimeout() {
 			addr,
 			currenttime - lastData
 		);
+#ifdef SLIMEVR_FIRMWARE
 		networkConnection.sendSensorError(
 			this->sensorId,
 			static_cast<uint8_t>(PacketErrorCode::WATCHDOG_TIMEOUT)
 		);
+#endif
 		lastData = currenttime;
 	}
 }
@@ -439,6 +449,7 @@ void ICM20948Sensor::saveCalibration(bool repeat) {
 		// Possible: Could make it repeat the final timer value if any of the biases are
 		// still 0. Save strategy could be improved.
 		if (sizeof(bias_save_periods) != bias_save_counter) {
+#ifdef SLIMEVR_FIRMWARE
 			globalTimer.in(
 				bias_save_periods[bias_save_counter] * 1000,
 				[](void* arg) -> bool {
@@ -447,6 +458,7 @@ void ICM20948Sensor::saveCalibration(bool repeat) {
 				},
 				this
 			);
+#endif
 		}
 	}
 }

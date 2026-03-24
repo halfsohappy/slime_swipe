@@ -54,18 +54,20 @@ void Sensor::setFusedRotation(Quat r) {
 void Sensor::sendData() {
 	if (newFusedRotation) {
 		newFusedRotation = false;
+#ifdef SLIMEVR_FIRMWARE
 		networkConnection.sendRotationData(
 			sensorId,
 			&fusedRotation,
 			DATA_TYPE_NORMAL,
 			calibrationAccuracy
 		);
+#endif
 
 #ifdef DEBUG_SENSOR
 		m_Logger.trace("Quaternion: %f, %f, %f, %f", UNPACK_QUATERNION(fusedRotation));
 #endif
 
-#if SEND_ACCELERATION
+#if defined(SLIMEVR_FIRMWARE) && SEND_ACCELERATION
 		if (newAcceleration) {
 			newAcceleration = false;
 			networkConnection.sendSensorAcceleration(sensorId, acceleration);

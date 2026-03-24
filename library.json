@@ -1,0 +1,66 @@
+{
+  "name": "SlimeVR-IMU",
+  "version": "1.0.0",
+  "description": "SlimeVR's IMU sensor fusion and driver library. Provides VQF-based sensor fusion, calibration, and drivers for 18+ IMU models (BMI160, BMI270, ICM42688, ICM45686, LSM6DSV, MPU6050, MPU9250, BNO080, BNO085, ICM20948, and more) for Arduino/PlatformIO projects.",
+  "keywords": [
+    "imu",
+    "sensor-fusion",
+    "vqf",
+    "quaternion",
+    "motion-tracking",
+    "bmi160",
+    "bmi270",
+    "icm42688",
+    "icm45686",
+    "lsm6dsv",
+    "mpu6050",
+    "mpu9250",
+    "bno080",
+    "bno085",
+    "icm20948"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/halfsohappy/slime_swipe.git"
+  },
+  "authors": [
+    {
+      "name": "SlimeVR Contributors",
+      "url": "https://slimevr.dev"
+    }
+  ],
+  "license": "MIT",
+  "frameworks": ["arduino"],
+  "platforms": ["espressif8266", "espressif32"],
+  "build": {
+    "srcDir": "src",
+    "includeDir": "include",
+    "srcFilter": [
+      "+<*>",
+      "-<main.cpp>",
+      "-<network/>",
+      "-<serial/>",
+      "-<debugging/>",
+      "-<batterymonitor.cpp>",
+      "-<batterymonitor.h>",
+      "-<credentials.h>",
+      "-<status/LEDManager.cpp>",
+      "-<status/StatusManager.cpp>",
+      "-<status/Status.cpp>"
+    ],
+    "extraScript": "library_build.py",
+    "libLDFMode": "chain+"
+  },
+  "dependencies": [
+    {
+      "name": "adafruit/Adafruit MCP23017 Arduino Library"
+    },
+    {
+      "name": "hideakitai/PCA9547"
+    }
+  ],
+  "examples": [
+    "examples/basic_imu/*",
+    "examples/sensor_fusion/*"
+  ]
+}

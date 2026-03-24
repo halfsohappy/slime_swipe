@@ -37,7 +37,9 @@ void BNO055Sensor::motionSetup() {
 #endif
 	{
 		m_Logger.fatal("Can't connect to BNO055 at address 0x%02x", addr);
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(50, 50, 200);
+#endif
 		return;
 	}
 
@@ -56,6 +58,7 @@ void BNO055Sensor::motionSetup() {
 void BNO055Sensor::motionLoop() {
 	m_tpsCounter.update();
 #if ENABLE_INSPECTION
+#ifdef SLIMEVR_FIRMWARE
 	{
 		Vector3 gyro = imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
 		Vector3 accel = imu.getVector(Adafruit_BNO055::VECTOR_LINEARACCEL);
@@ -71,6 +74,7 @@ void BNO055Sensor::motionLoop() {
 			255
 		);
 	}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 
 	uint8_t gyroCalibrationState;

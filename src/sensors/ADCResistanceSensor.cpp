@@ -38,7 +38,9 @@ void ADCResistanceSensor::motionLoop() {
 }
 
 void ADCResistanceSensor::sendData() {
+#ifdef SLIMEVR_FIRMWARE
 	networkConnection.sendFlexData(sensorId, m_Data);
+#endif
 }
 
 }  // namespace SlimeVR::Sensors

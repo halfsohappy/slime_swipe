@@ -36,7 +36,9 @@ void BNO080Sensor::motionSetup() {
 			getIMUNameByType(sensorType),
 			addr
 		);
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(50, 50, 200);
+#endif
 		return;
 	}
 
@@ -87,6 +89,7 @@ void BNO080Sensor::motionSetup() {
 	imu.requestCalibrationStatus();
 
 #if EXPERIMENTAL_BNO_DISABLE_ACCEL_CALIBRATION
+#ifdef SLIMEVR_FIRMWARE
 	// EXPERIMENTAL Disable accelerometer calibration after 1 minute to prevent
 	// "stomping" bug WARNING : Executing IMU commands outside of the update loop is not
 	// allowed since the address might have changed when the timer is executed!
@@ -121,6 +124,7 @@ void BNO080Sensor::motionSetup() {
 			&imu
 		);
 	}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 	// imu.sendCalibrateCommand(SH2_CAL_ACCEL | SH2_CAL_GYRO_IN_HAND | SH2_CAL_MAG |
 	// SH2_CAL_ON_TABLE | SH2_CAL_PLANAR);
@@ -153,6 +157,7 @@ void BNO080Sensor::motionLoop() {
 		lastData = millis();
 
 #if ENABLE_INSPECTION
+#ifdef SLIMEVR_FIRMWARE
 		{
 			if (imu.hasNewRawAccel() && imu.hasNewRawGyro() && imu.hasNewRawMag()) {
 				int16_t aX, aY, aZ, rX, rY, rZ, mX, mY, mZ;
@@ -183,6 +188,7 @@ void BNO080Sensor::motionLoop() {
 				);
 			}
 		}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 
 		if (imu.hasNewRawGyro()) {
@@ -296,13 +302,17 @@ void BNO080Sensor::motionLoop() {
 				error.error_code
 			);
 		}
+#ifdef SLIMEVR_FIRMWARE
 		statusManager.setStatus(SlimeVR::Status::IMU_ERROR, true);
+#endif
 		working = false;
 		lastData = millis();
 		uint8_t rr = imu.resetReason();
 		if (rr != lastReset) {
 			lastReset = rr;
+#ifdef SLIMEVR_FIRMWARE
 			networkConnection.sendSensorError(this->sensorId, rr);
+#endif
 		}
 
 		m_Logger.error(
@@ -335,18 +345,20 @@ SensorStatus BNO080Sensor::getSensorState() {
 void BNO080Sensor::sendData() {
 	if (newFusedRotation) {
 		newFusedRotation = false;
+#ifdef SLIMEVR_FIRMWARE
 		networkConnection.sendRotationData(
 			sensorId,
 			&fusedRotation,
 			DATA_TYPE_NORMAL,
 			calibrationAccuracy
 		);
+#endif
 
 #ifdef DEBUG_SENSOR
 		m_Logger.trace("Quaternion: %f, %f, %f, %f", UNPACK_QUATERNION(fusedRotation));
 #endif
 
-#if SEND_ACCELERATION
+#if defined(SLIMEVR_FIRMWARE) && SEND_ACCELERATION
 		if (newAcceleration) {
 			newAcceleration = false;
 			networkConnection.sendSensorAcceleration(
@@ -359,13 +371,16 @@ void BNO080Sensor::sendData() {
 
 	sendTempIfNeeded();
 
+#ifdef SLIMEVR_FIRMWARE
 	if (tap != 0) {
 		networkConnection.sendSensorTap(sensorId, tap);
 		tap = 0;
 	}
+#endif
 }
 
 void BNO080Sensor::sendTempIfNeeded() {
+#ifdef SLIMEVR_FIRMWARE
 	uint32_t now = micros();
 	constexpr float maxSendRateHz = 2.0f;
 	constexpr uint32_t sendInterval = 1.0f / maxSendRateHz * 1e6;
@@ -374,6 +389,7 @@ void BNO080Sensor::sendTempIfNeeded() {
 		m_lastTemperaturePacketSent = now - (elapsed - sendInterval);
 		networkConnection.sendTemperature(sensorId, lastReadTemperature);
 	}
+#endif
 }
 
 void BNO080Sensor::startCalibration(int calibrationType) {

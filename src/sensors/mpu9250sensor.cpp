@@ -68,10 +68,14 @@ void MPU9250Sensor::motionSetup() {
 	imu.getAcceleration(&ax, &ay, &az);
 	float g_az = (float)az / 16384;  // For 2G sensitivity
 	if (g_az < -0.75f) {
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+#endif
 		m_Logger.info("Flip front to confirm start calibration");
 		delay(5000);
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+#endif
 
 		imu.getAcceleration(&ax, &ay, &az);
 		g_az = (float)az / 16384;
@@ -112,7 +116,9 @@ void MPU9250Sensor::motionSetup() {
 #if MPU_USE_DMPMAG
 	uint8_t devStatus = imu.dmpInitialize();
 	if (devStatus == 0) {
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(50, 50, 5);
+#endif
 
 		// turn on the DMP, now that it's ready
 		m_Logger.debug("Enabling DMP...");
@@ -159,6 +165,7 @@ void MPU9250Sensor::motionSetup() {
 void MPU9250Sensor::motionLoop() {
 	m_tpsCounter.update();
 #if ENABLE_INSPECTION
+#ifdef SLIMEVR_FIRMWARE
 	{
 		int16_t rX, rY, rZ, aX, aY, aZ, mX, mY, mZ;
 		imu.getRotation(&rX, &rY, &rZ);
@@ -181,6 +188,7 @@ void MPU9250Sensor::motionLoop() {
 			255
 		);
 	}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 
 #if MPU_USE_DMPMAG
@@ -240,22 +248,30 @@ void MPU9250Sensor::motionLoop() {
 }
 
 void MPU9250Sensor::startCalibration(int calibrationType) {
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.on();
+#endif
 #if MPU_USE_DMPMAG
 	// with DMP, we just need mag data
 	constexpr int calibrationSamples = 300;
 
 	// Blink calibrating led before user should rotate the sensor
 	m_Logger.info("Gently rotate the device while it's gathering magnetometer data");
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.pattern(15, 300, 3000 / 310);
+#endif
 	MagnetoCalibration* magneto = new MagnetoCalibration();
 	for (int i = 0; i < calibrationSamples; i++) {
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+#endif
 		int16_t mx, my, mz;
 		imu.getMagnetometer(&mx, &my, &mz);
 		magneto->sample(my, mx, -mz);
 
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+#endif
 		delay(250);
 	}
 	m_Logger.debug("Calculating calibration data...");
@@ -326,7 +342,9 @@ void MPU9250Sensor::startCalibration(int calibrationType) {
 		"Gently rotate the device while it's gathering accelerometer and magnetometer "
 		"data"
 	);
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.pattern(15, 300, 3000 / 310);
+#endif
 
 	MagnetoCalibration* magneto_acc = new MagnetoCalibration();
 	MagnetoCalibration* magneto_mag = new MagnetoCalibration();
@@ -335,13 +353,17 @@ void MPU9250Sensor::startCalibration(int calibrationType) {
 	// a calibration that takes a second or three and a calibration that takes much
 	// longer.
 	for (int i = 0; i < calibrationSamples; i++) {
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+#endif
 		int16_t ax, ay, az, gx, gy, gz, mx, my, mz;
 		imu.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
 		magneto_acc->sample(ax, ay, az);
 		magneto_mag->sample(my, mx, -mz);
 
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+#endif
 		delay(250);
 	}
 	m_Logger.debug("Calculating calibration data...");
@@ -397,7 +419,9 @@ void MPU9250Sensor::startCalibration(int calibrationType) {
 	configuration.setSensor(sensorId, config);
 	configuration.save();
 
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.off();
+#endif
 	m_Logger.debug("Saved the calibration data");
 
 	m_Logger.info("Calibration data gathered");

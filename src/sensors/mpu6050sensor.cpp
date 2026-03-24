@@ -108,7 +108,9 @@ void MPU6050Sensor::motionSetup() {
 		imu.PrintActiveOffsets();
 #endif  // IMU_MPU6050_RUNTIME_CALIBRATION
 
+#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(50, 50, 5);
+#endif
 
 		// turn on the DMP, now that it's ready
 		m_Logger.debug("Enabling DMP...");
@@ -139,6 +141,7 @@ void MPU6050Sensor::motionSetup() {
 void MPU6050Sensor::motionLoop() {
 	m_tpsCounter.update();
 #if ENABLE_INSPECTION
+#ifdef SLIMEVR_FIRMWARE
 	{
 		int16_t rX, rY, rZ, aX, aY, aZ;
 		imu.getRotation(&rX, &rY, &rZ);
@@ -160,6 +163,7 @@ void MPU6050Sensor::motionLoop() {
 			255
 		);
 	}
+#endif  // SLIMEVR_FIRMWARE
 #endif
 
 	if (!dmpReady) {
@@ -192,7 +196,9 @@ void MPU6050Sensor::motionLoop() {
 }
 
 void MPU6050Sensor::startCalibration(int calibrationType) {
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.on();
+#endif
 
 #ifdef IMU_MPU6050_RUNTIME_CALIBRATION
 	m_Logger.info(
@@ -234,5 +240,7 @@ void MPU6050Sensor::startCalibration(int calibrationType) {
 	m_Logger.info("Calibration finished");
 #endif  // !IMU_MPU6050_RUNTIME_CALIBRATION
 
+#ifdef SLIMEVR_FIRMWARE
 	ledManager.off();
+#endif
 }

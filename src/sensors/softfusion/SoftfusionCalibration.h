@@ -117,7 +117,9 @@ public:
 			return;
 		}
 
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		logger.info("Flip front in 5 seconds to start calibration");
 		lastRawSample = eatSamplesReturnLast(5000);
 		gravity = static_cast<sensor_real_t>(
@@ -130,7 +132,9 @@ public:
 			logger.info("Flip not detected. Skipping calibration.");
 		}
 
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 	}
 
 	void startCalibration(int calibrationType) final {
@@ -268,16 +272,24 @@ private:
 			"(%d seconds)",
 			GyroCalibDelaySeconds
 		);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		auto lastSamples = eatSamplesReturnLast(GyroCalibDelaySeconds);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 
 		calibration.temperature = std::get<2>(lastSamples) / IMU::TemperatureSensitivity
 								+ IMU::TemperatureBias;
 		logger.trace("Calibration temperature: %f", calibration.temperature);
 
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(100, 100, 3);
+		#endif
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		logger.info("Gyro calibration started...");
 
 		int32_t sumXYZ[3] = {0};
@@ -301,7 +313,9 @@ private:
 			});
 		}
 
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 		calibration.G_off[0]
 			= static_cast<float>(sumXYZ[0]) / static_cast<float>(sampleCount);
 		calibration.G_off[1]
@@ -327,9 +341,13 @@ private:
 			"and do not hold/touch for %d seconds each",
 			AccelCalibRestSeconds
 		);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		eatSamplesForSeconds(AccelCalibDelaySeconds);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 
 		RestDetectionParams calibrationRestDetectionParams;
 		calibrationRestDetectionParams.restMinTime = AccelCalibRestSeconds;
@@ -350,8 +368,12 @@ private:
 
 		std::vector<float> accelCalibrationChunk;
 		accelCalibrationChunk.resize(numSamplesPerPosition * 3);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(100, 100, 6);
+		#endif
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		logger.info("Gathering accelerometer data...");
 		logger.info(
 			"Waiting for position %i, you can leave the device as is...",
@@ -401,8 +423,12 @@ private:
 							numPositionsRecorded++;
 							numCurrentPositionSamples = 0;
 							if (numPositionsRecorded < expectedPositions) {
+								#ifdef SLIMEVR_FIRMWARE
 								ledManager.pattern(50, 50, 2);
+								#endif
+								#ifdef SLIMEVR_FIRMWARE
 								ledManager.on();
+								#endif
 								logger.info(
 									"Recorded, waiting for position %i...",
 									numPositionsRecorded + 1
@@ -422,7 +448,9 @@ private:
 				[](const int16_t rawTemp, const sensor_real_t timeDelta) {},
 			});
 		}
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 		logger.debug("Calculating accelerometer calibration data...");
 		accelCalibrationChunk.resize(0);
 
@@ -453,7 +481,9 @@ private:
 			"Calibrating IMU sample rate in %d second(s)...",
 			SampleRateCalibDelaySeconds
 		);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
+		#endif
 		eatSamplesForSeconds(SampleRateCalibDelaySeconds);
 
 		uint32_t accelSamples = 0;
@@ -501,7 +531,9 @@ private:
 			1.0 / calibration.A_Ts,
 			1.0 / calibration.T_Ts
 		);
+		#ifdef SLIMEVR_FIRMWARE
 		ledManager.off();
+		#endif
 
 		// fusion needs to be recalculated
 		Base::recalcFusion();
