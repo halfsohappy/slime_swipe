@@ -113,6 +113,12 @@ Vector3 SlimeIMU::getLinearAcceleration(size_t sensorIndex) const {
 	return sensors[sensorIndex]->getAcceleration();
 }
 
+Vector3 SlimeIMU::getGyroscope(size_t sensorIndex) const {
+	auto& sensors = sensorManager.getSensors();
+	if (sensorIndex >= sensors.size()) return Vector3();
+	return sensors[sensorIndex]->getGyroscope();
+}
+
 SensorTypeID SlimeIMU::getSensorType(size_t sensorIndex) const {
 	return sensorManager.getSensorType(sensorIndex);
 }

@@ -83,6 +83,13 @@ void ICM20948Sensor::motionLoop() {
 	hasdata = false;
 	readFIFOToEnd();
 	readRotation();
+	if (hasdata) {
+		(void)imu.getAGMT();
+		constexpr float DEG_TO_RAD = float(PI) / 180.0f;
+		setGyroscope(
+			Vector3(imu.gyrX() * DEG_TO_RAD, imu.gyrY() * DEG_TO_RAD, imu.gyrZ() * DEG_TO_RAD)
+		);
+	}
 	checkSensorTimeout();
 	// Performance Test
 	/*

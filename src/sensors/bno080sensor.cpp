@@ -58,6 +58,8 @@ void BNO080Sensor::motionSetup() {
 
 	this->imu.enableLinearAccelerometer(10);
 
+	this->imu.enableGyro(10);
+
 	toggles = configuration.getSensorToggles(sensorId);
 
 	if (!toggles.getToggle(SensorToggles::MagEnabled)) {
@@ -184,6 +186,12 @@ void BNO080Sensor::motionLoop() {
 		if (imu.hasNewRawGyro()) {
 			lastReadTemperature = imu.getGyroTemp();
 			imu.resetNewRawGyro();
+		}
+
+		if (imu.hasNewGyro()) {
+			setGyroscope(
+				Vector3(imu.getGyroX(), imu.getGyroY(), imu.getGyroZ())
+			);
 		}
 
 		if (!toggles.getToggle(SensorToggles::MagEnabled)) {

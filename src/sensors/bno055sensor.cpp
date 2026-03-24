@@ -75,6 +75,7 @@ void BNO055Sensor::motionLoop() {
 
 	// TODO Optimize a bit with setting rawQuat directly
 	setFusedRotation(imu.getQuat());
+	setGyroscope(imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE));
 	hadData = true;
 
 #if SEND_ACCELERATION

@@ -37,6 +37,11 @@ void Sensor::setAcceleration(Vector3 a) {
 	newAcceleration = true;
 }
 
+void Sensor::setGyroscope(Vector3 g) {
+	gyroscope = g;
+	newGyroscope = true;
+}
+
 void Sensor::setFusedRotation(Quat r) {
 	fusedRotation = r * sensorOffset;
 	bool changed = OPTIMIZE_UPDATES

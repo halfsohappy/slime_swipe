@@ -115,6 +115,8 @@ class SoftFusionSensor : public Sensor {
 		m_fusion.updateGyro(gyroData, calibrator.getGyroTimestep());
 
 		calibrator.provideGyroSample(xyz);
+
+		setGyroscope(Vector3(gyroData[0], gyroData[1], gyroData[2]));
 	}
 
 	void

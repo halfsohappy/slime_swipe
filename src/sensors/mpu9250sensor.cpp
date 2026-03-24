@@ -37,6 +37,9 @@ constexpr float gscale
 	= (250. / 32768.0) * (PI / 180.0);  // gyro default 250 LSB per d/s -> rad/s
 // #endif
 
+// DMP gyro full-scale range is 2000 dps -> rad/s per LSB
+constexpr float dmpGscale = (2000.0f / 32768.0f) * (float(PI) / 180.0f);
+
 #define ACCEL_SENSITIVITY_2G 16384.0f
 
 // Accel scale conversion steps: LSB/G -> G -> m/s^2
@@ -208,6 +211,15 @@ void MPU9250Sensor::motionLoop() {
 		sfusion.updateAcc(Axyz);
 	}
 #endif
+	{
+		int16_t rawGyro[3];
+		imu.dmpGetGyro(rawGyro, dmpPacket);
+		setGyroscope(Vector3(
+			rawGyro[0] * dmpGscale,
+			rawGyro[1] * dmpGscale,
+			rawGyro[2] * dmpGscale
+		));
+	}
 #else
 	union fifo_sample_raw buf;
 	uint16_t remaining_samples;
@@ -226,6 +238,7 @@ void MPU9250Sensor::motionLoop() {
 
 		sfusion.update9D(Axyz, Gxyz, Mxyz);
 	}
+	setGyroscope(Vector3(Gxyz[0], Gxyz[1], Gxyz[2]));
 #endif
 	setFusedRotation(sfusion.getQuaternionQuat());
 #if SEND_ACCELERATION

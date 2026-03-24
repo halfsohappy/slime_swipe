@@ -78,6 +78,7 @@ public:
 	virtual void motionLoop(){};
 	virtual void sendData();
 	virtual void setAcceleration(Vector3 a);
+	virtual void setGyroscope(Vector3 g);
 	virtual void setFusedRotation(Quat r);
 	virtual void startCalibration(int calibrationType){};
 	virtual SensorStatus getSensorState();
@@ -96,6 +97,7 @@ public:
 	uint8_t getSensorId() { return sensorId; };
 	SensorTypeID getSensorType() { return sensorType; };
 	const Vector3& getAcceleration() { return acceleration; };
+	const Vector3& getGyroscope() { return gyroscope; };
 	const Quat& getFusedRotation() { return fusedRotation; };
 	bool hasNewDataToSend() { return newFusedRotation || newAcceleration; };
 	inline bool hasCompletedRestCalibration() { return restCalibrationComplete; }
@@ -139,6 +141,9 @@ protected:
 
 	bool newAcceleration = false;
 	Vector3 acceleration{};
+
+	bool newGyroscope = false;
+	Vector3 gyroscope{};
 
 	SensorPosition m_SensorPosition = SensorPosition::POSITION_NO;
 

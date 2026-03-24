@@ -41,6 +41,9 @@
 constexpr float ASCALE_2G
 	= ((32768. / ACCEL_SENSITIVITY_2G) / 32768.) * CONST_EARTH_GRAVITY;
 
+// DMP gyro full-scale range is 2000 dps -> rad/s per LSB
+constexpr float GSCALE_2000DPS = (2000.0f / 32768.0f) * (float(PI) / 180.0f);
+
 void MPU6050Sensor::motionSetup() {
 	imu.initialize(addr);
 	if (!imu.testConnection()) {
@@ -164,6 +167,16 @@ void MPU6050Sensor::motionLoop() {
 		sfusion.updateQuaternion(rawQuat);
 
 		setFusedRotation(sfusion.getQuaternionQuat());
+
+		{
+			VectorInt16 rawGyro;
+			imu.dmpGetGyro(&rawGyro, fifoBuffer);
+			setGyroscope(Vector3(
+				rawGyro.x * GSCALE_2000DPS,
+				rawGyro.y * GSCALE_2000DPS,
+				rawGyro.z * GSCALE_2000DPS
+			));
+		}
 
 #if SEND_ACCELERATION
 		{

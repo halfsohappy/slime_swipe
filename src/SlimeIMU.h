@@ -61,6 +61,7 @@
  *       if (imu.hasNewData(0)) {
  *           auto quat = imu.getQuaternion(0);
  *           auto accel = imu.getLinearAcceleration(0);
+ *           auto gyro = imu.getGyroscope(0);
  *       }
  *   }
  */
@@ -134,6 +135,13 @@ public:
 	 * Units: m/s²
 	 */
 	Vector3 getLinearAcceleration(size_t sensorIndex) const;
+
+	/**
+	 * Get calibrated gyroscope (angular velocity) for a sensor.
+	 * Returns zero vector if sensor not available.
+	 * Units: rad/s
+	 */
+	Vector3 getGyroscope(size_t sensorIndex) const;
 
 	/**
 	 * Get the detected sensor type for a given index.
