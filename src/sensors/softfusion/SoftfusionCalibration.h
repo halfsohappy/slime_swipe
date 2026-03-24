@@ -286,8 +286,6 @@ private:
 
 		#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(100, 100, 3);
-		#endif
-		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
 		#endif
 		logger.info("Gyro calibration started...");
@@ -370,8 +368,6 @@ private:
 		accelCalibrationChunk.resize(numSamplesPerPosition * 3);
 		#ifdef SLIMEVR_FIRMWARE
 		ledManager.pattern(100, 100, 6);
-		#endif
-		#ifdef SLIMEVR_FIRMWARE
 		ledManager.on();
 		#endif
 		logger.info("Gathering accelerometer data...");
@@ -425,8 +421,6 @@ private:
 							if (numPositionsRecorded < expectedPositions) {
 								#ifdef SLIMEVR_FIRMWARE
 								ledManager.pattern(50, 50, 2);
-								#endif
-								#ifdef SLIMEVR_FIRMWARE
 								ledManager.on();
 								#endif
 								logger.info(
