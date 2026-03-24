@@ -7,9 +7,11 @@
 #include "SlimeIMU.h"
 
 #include <i2cscan.h>
+#include <SPI.h>
 
 #include "GlobalVars.h"
 #include "configuration/Configuration.h"
+#include "defines.h"
 #include "logging/Logger.h"
 
 // Global instances required by the internal sensor/calibration code
@@ -39,25 +41,42 @@ bool SlimeIMU::begin(const SlimeIMUConfig& config) {
 	// Initialize calibration storage
 	configuration.setup();
 
-	// Clear I2C bus in case of stuck state
-	auto clearResult = I2CSCAN::clearBus(config.sdaPin, config.sclPin);
-	if (clearResult != 0) {
-		logger.warn("Can't clear I2C bus, error %d", clearResult);
-	}
+#if IMU_PROTOCOL == IMU_PROTOCOL_I2C
+		// Clear I2C bus in case of stuck state
+		auto clearResult = I2CSCAN::clearBus(config.sdaPin, config.sclPin);
+		if (clearResult != 0) {
+			logger.warn("Can't clear I2C bus, error %d", clearResult);
+		}
 
 #ifdef ESP32
-	Wire.end();
+		Wire.end();
 #endif
 
-	Wire.begin(static_cast<int>(config.sdaPin), static_cast<int>(config.sclPin));
+		Wire.begin(static_cast<int>(config.sdaPin), static_cast<int>(config.sclPin));
 
 #ifdef ESP8266
-	Wire.setClockStretchLimit(150000L);
+		Wire.setClockStretchLimit(150000L);
 #endif
 #ifdef ESP32
-	Wire.setTimeOut(150);
+		Wire.setTimeOut(150);
 #endif
-	Wire.setClock(config.i2cSpeed);
+		Wire.setClock(config.i2cSpeed);
+#else
+		uint8_t spiSckPin = config.spiSckPin == 255 ? PIN_IMU_SPI_SCK : config.spiSckPin;
+		uint8_t spiMisoPin
+			= config.spiMisoPin == 255 ? PIN_IMU_SPI_MISO : config.spiMisoPin;
+		uint8_t spiMosiPin
+			= config.spiMosiPin == 255 ? PIN_IMU_SPI_MOSI : config.spiMosiPin;
+#ifdef ESP32
+		if (spiSckPin != 255 && spiMisoPin != 255 && spiMosiPin != 255) {
+			SPI.begin(spiSckPin, spiMisoPin, spiMosiPin);
+		} else {
+			SPI.begin();
+		}
+#else
+		SPI.begin();
+#endif
+#endif
 
 	// Wait for IMU to boot
 	delay(500);

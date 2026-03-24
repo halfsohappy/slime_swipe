@@ -79,6 +79,9 @@ struct SlimeIMUConfig {
 	uint8_t sdaPin = 21;
 	uint8_t sclPin = 22;
 	uint32_t i2cSpeed = 400000;
+	uint8_t spiSckPin = 255;
+	uint8_t spiMisoPin = 255;
+	uint8_t spiMosiPin = 255;
 	bool useRuntimeCalibration = true;
 };
 

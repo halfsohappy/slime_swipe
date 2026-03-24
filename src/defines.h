@@ -40,6 +40,13 @@
 #define SECOND_IMU_ROTATION DEG_0
 #endif
 
+#define IMU_PROTOCOL_I2C 0
+#define IMU_PROTOCOL_SPI 1
+
+#ifndef IMU_PROTOCOL
+#define IMU_PROTOCOL IMU_PROTOCOL_I2C
+#endif
+
 #ifndef PRIMARY_IMU_OPTIONAL
 #define PRIMARY_IMU_OPTIONAL false
 #endif
@@ -59,6 +66,35 @@
 #endif
 #ifndef PIN_IMU_INT_2
 #define PIN_IMU_INT_2 255
+#endif
+
+#ifndef PIN_IMU_CS
+#define PIN_IMU_CS 15
+#endif
+#ifndef PIN_IMU_CS_2
+#define PIN_IMU_CS_2 255
+#endif
+
+#ifndef PIN_IMU_SPI_SCK
+#define PIN_IMU_SPI_SCK 255
+#endif
+#ifndef PIN_IMU_SPI_MISO
+#define PIN_IMU_SPI_MISO 255
+#endif
+#ifndef PIN_IMU_SPI_MOSI
+#define PIN_IMU_SPI_MOSI 255
+#endif
+
+#ifndef IMU_SPI_CLOCK
+#define IMU_SPI_CLOCK 24000000UL
+#endif
+
+#ifndef IMU_SPI_BIT_ORDER
+#define IMU_SPI_BIT_ORDER MSBFIRST
+#endif
+
+#ifndef IMU_SPI_DATA_MODE
+#define IMU_SPI_DATA_MODE SPI_MODE3
 #endif
 
 #ifndef BATTERY_MONITOR

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping with SlimeVR! This document explains what to know when
+Thanks for helping with SlimeIMU! This document explains what to know when
 contributing.
 
 We are most active on [Discord](https://discord.gg/SlimeVR), come chat with us if you
@@ -8,8 +8,7 @@ have any questions or want to hang out! 😎
 
 ## Setting up the development environment
 
-We use PlatformIO as our build tooling and rely on Git for version control. There are
-instructions to set all of this up [here](https://docs.slimevr.dev/firmware/setup-and-install.html).
+We use PlatformIO as our build tooling and rely on Git for version control.
 
 ## Using third-party code
 
@@ -29,7 +28,7 @@ Instead, we will want to do the following:
 
 ### Check the license
 
-The SlimeVR firmware is under the MIT License and also is intended to be permissively
+The SlimeIMU library is under the MIT License and also is intended to be permissively
 licensed. This means that we will not accept contributions that include code from any
 viral software licenses. If you do not know what that means, here is a breakdown of some
 common software licenses:
@@ -84,7 +83,7 @@ But to save you time, we have outlined the basic workflow for you.
 
 There is a field called `lib_deps` in the `platformio.ini` file that describes the list
 of dependencies in the code. These are third-party libraries located outside the main
-firmware git repo. You want to add your dependency to this list. The full list of
+library git repo. You want to add your dependency to this list. The full list of
 options for this field is outlined [here], but for simplicity, there are a few common
 ways of giving dependencies:
 
@@ -110,7 +109,7 @@ In order, these dependencies do the following:
 1. Links to a folder locally on your computer with the path `C:/path/to/the/library`.
   This is useful when testing your code locally where you want to make changes in your
   fork (which is checked out at that path), but you don't want to have to constantly
-  commit and push to your fork just to get the changes usable by the firmware.
+  commit and push to your fork just to get the changes usable by the library.
 
 > **Note**
 > If you have forked the dependency instead of using it as-is, we recommend using the
@@ -122,7 +121,7 @@ In order, these dependencies do the following:
 >
 > Once you are done doing local testing and are ready to submit a PR, you can push
 > whatever changes you made to the forked dependency to its repository, and switch the
-> firmware's `lib_deps` back to the Git url.
+> library's `lib_deps` back to the Git url.
 >
 > Dont forget that your fork will need to be pushed and publicly viewable on GitHub for
 > us to be able to use and review it!

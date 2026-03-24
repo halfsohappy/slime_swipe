@@ -49,7 +49,27 @@ PIN_IMU_SDA, PRIMARY_IMU_OPTIONAL, BMI160_QMC_REMAP) \
 */
 
 #ifndef SENSOR_DESC_LIST
-#if BOARD == BOARD_SLIMEVR_V1_2
+#if IMU_PROTOCOL == IMU_PROTOCOL_SPI
+#define SENSOR_DESC_LIST                                                           \
+	SENSOR_DESC_ENTRY(                                                             \
+		IMU,                                                                       \
+		DIRECT_PIN(PIN_IMU_CS),                                                    \
+		IMU_ROTATION,                                                              \
+		DIRECT_SPI(IMU_SPI_CLOCK, IMU_SPI_BIT_ORDER, IMU_SPI_DATA_MODE),          \
+		PRIMARY_IMU_OPTIONAL,                                                      \
+		DIRECT_PIN(PIN_IMU_INT),                                                   \
+		0                                                                          \
+	)                                                                              \
+	SENSOR_DESC_ENTRY(                                                             \
+		SECOND_IMU,                                                                \
+		DIRECT_PIN(PIN_IMU_CS_2),                                                  \
+		SECOND_IMU_ROTATION,                                                       \
+		DIRECT_SPI(IMU_SPI_CLOCK, IMU_SPI_BIT_ORDER, IMU_SPI_DATA_MODE),          \
+		SECONDARY_IMU_OPTIONAL,                                                    \
+		DIRECT_PIN(PIN_IMU_INT_2),                                                 \
+		0                                                                          \
+	)
+#elif BOARD == BOARD_SLIMEVR_V1_2
 #define SENSOR_DESC_LIST                             \
 	SENSOR_DESC_ENTRY(                               \
 		IMU,                                         \
