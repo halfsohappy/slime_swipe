@@ -20,12 +20,10 @@
 	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 	THE SOFTWARE.
 */
-// ================================================
-// See docs for configuration options and examples:
-// https://docs.slimevr.dev/firmware/configuring-project.html#2-configuring-definesh
-// ================================================
 
-// Set parameters of IMU and board used
+// SlimeIMU Library - Sensor and pin configuration
+// Override these defines in your platformio.ini build_flags or before including SlimeIMU.h
+
 #ifndef IMU
 #define IMU IMU_AUTO
 #endif
@@ -33,13 +31,13 @@
 #define SECOND_IMU IMU_AUTO
 #endif
 #ifndef BOARD
-#define BOARD BOARD_SLIMEVR_V1_2
+#define BOARD BOARD_CUSTOM
 #endif
 #ifndef IMU_ROTATION
-#define IMU_ROTATION DEG_270
+#define IMU_ROTATION DEG_0
 #endif
 #ifndef SECOND_IMU_ROTATION
-#define SECOND_IMU_ROTATION DEG_270
+#define SECOND_IMU_ROTATION DEG_0
 #endif
 
 #ifndef PRIMARY_IMU_OPTIONAL
@@ -49,30 +47,27 @@
 #define SECONDARY_IMU_OPTIONAL true
 #endif
 
-// Set I2C address here or directly in IMU_DESC_ENTRY for each IMU used
-// If not set, default address is used based on the IMU and Sensor ID
-// #define PRIMARY_IMU_ADDRESS_ONE 0x4a
-// #define SECONDARY_IMU_ADDRESS_TWO 0x4b
-
-#ifndef BATTERY_MONITOR
-// Battery monitoring options (comment to disable):
-//   BAT_EXTERNAL for ADC pin,
-//   BAT_INTERNAL for internal - can detect only low battery,
-//   BAT_MCP3021 for external ADC connected over I2C
-#define BATTERY_MONITOR BAT_EXTERNAL
+// Default I2C pins - override via build flags for your board
+#ifndef PIN_IMU_SDA
+#define PIN_IMU_SDA 21
+#endif
+#ifndef PIN_IMU_SCL
+#define PIN_IMU_SCL 22
+#endif
+#ifndef PIN_IMU_INT
+#define PIN_IMU_INT 255
+#endif
+#ifndef PIN_IMU_INT_2
+#define PIN_IMU_INT_2 255
 #endif
 
-// --- OVERRIDES FOR DEFAULT PINS
+#ifndef BATTERY_MONITOR
+#define BATTERY_MONITOR BAT_INTERNAL
+#endif
 
-// #define PIN_IMU_SDA 14
-// #define PIN_IMU_SCL 12
-// #define PIN_IMU_INT 16
-// #define PIN_IMU_INT_2 13
-// #define PIN_BATTERY_LEVEL 17
-// #define LED_PIN 2
-// #define LED_INVERTED true
-// #define BATTERY_SHIELD_RESISTANCE 0
-// #define BATTERY_SHIELD_R1 10
-// #define BATTERY_SHIELD_R2 40.2
-
-// ------------------------------
+#ifndef LED_PIN
+#define LED_PIN LED_OFF
+#endif
+#ifndef LED_INVERTED
+#define LED_INVERTED false
+#endif

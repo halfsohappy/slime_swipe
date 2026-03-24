@@ -36,7 +36,6 @@ void SensorManager::setup() {
 	uint8_t activeSensorCount = sensorBuilder.buildAllSensors();
 
 	m_Logger.info("%d sensor(s) configured", activeSensorCount);
-	// Check and scan i2c if no sensors active
 	if (activeSensorCount == 0) {
 		m_Logger.error(
 			"Can't find I2C device on provided addresses, scanning for all I2C devices "
@@ -58,8 +57,6 @@ void SensorManager::postSetup() {
 }
 
 void SensorManager::update() {
-	// Gather IMU data
-	bool allIMUGood = true;
 	for (auto& sensor : m_Sensors) {
 		if (sensor->isWorking()) {
 			if (sensor->m_hwInterface != nullptr) {
@@ -67,58 +64,7 @@ void SensorManager::update() {
 			}
 			sensor->motionLoop();
 		}
-		if (sensor->getSensorState() == SensorStatus::SENSOR_ERROR) {
-			allIMUGood = false;
-		}
 	}
-
-	statusManager.setStatus(SlimeVR::Status::IMU_ERROR, !allIMUGood);
-
-	if (!networkConnection.isConnected()) {
-		return;
-	}
-
-#ifndef PACKET_BUNDLING
-	static_assert(false, "PACKET_BUNDLING not set");
-#endif
-#if PACKET_BUNDLING == PACKET_BUNDLING_BUFFERED
-	uint32_t now = micros();
-	bool shouldSend = false;
-	bool allSensorsReady = true;
-	for (auto& sensor : m_Sensors) {
-		if (!sensor->isWorking()) {
-			continue;
-		}
-		if (sensor->hasNewDataToSend()) {
-			shouldSend = true;
-		}
-		allSensorsReady &= sensor->hasNewDataToSend();
-	}
-
-	if (now - m_LastBundleSentAtMicros < PACKET_BUNDLING_BUFFER_SIZE_MICROS) {
-		shouldSend &= allSensorsReady;
-	}
-
-	if (!shouldSend) {
-		return;
-	}
-
-	m_LastBundleSentAtMicros = now;
-#endif
-
-#if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
-	networkConnection.beginBundle();
-#endif
-
-	for (auto& sensor : m_Sensors) {
-		if (sensor->isWorking()) {
-			sensor->sendData();
-		}
-	}
-
-#if PACKET_BUNDLING != PACKET_BUNDLING_DISABLED
-	networkConnection.endBundle();
-#endif
 }
 
 }  // namespace SlimeVR::Sensors

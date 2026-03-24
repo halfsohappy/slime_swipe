@@ -68,21 +68,15 @@ void ICM20948Sensor::motionLoop() {
 		float mY = imu.magY();
 		float mZ = imu.magZ();
 
-		networkConnection.sendInspectionRawIMUData(
-			sensorId,
-			rX,
-			rY,
-			rZ,
-			255,
-			aX,
-			aY,
-			aZ,
-			255,
-			mX,
-			mY,
-			mZ,
-			255
-		);
+		(void)rX;
+		(void)rY;
+		(void)rZ;
+		(void)aX;
+		(void)aY;
+		(void)aZ;
+		(void)mX;
+		(void)mY;
+		(void)mZ;
 	}
 #endif
 
@@ -125,26 +119,9 @@ void ICM20948Sensor::sendData() {
 	if (newFusedRotation) {
 		newFusedRotation = false;
 
-#if (USE_6_AXIS)
-		{
-			networkConnection
-				.sendRotationData(sensorId, &fusedRotation, DATA_TYPE_NORMAL, 0);
-		}
-#else
-		{
-			networkConnection.sendRotationData(
-				sensorId,
-				&fusedRotation,
-				DATA_TYPE_NORMAL,
-				dmpData.Quat9.Data.Accuracy
-			);
-		}
-#endif
-
 #if SEND_ACCELERATION
 		if (newAcceleration) {
 			newAcceleration = false;
-			networkConnection.sendSensorAcceleration(sensorId, acceleration);
 		}
 #endif
 	}
@@ -331,10 +308,6 @@ void ICM20948Sensor::checkSensorTimeout() {
 			"Sensor timeout I2C Address 0x%02x delaytime: %ld ms",
 			addr,
 			currenttime - lastData
-		);
-		networkConnection.sendSensorError(
-			this->sensorId,
-			static_cast<uint8_t>(PacketErrorCode::WATCHDOG_TIMEOUT)
 		);
 		lastData = currenttime;
 	}
