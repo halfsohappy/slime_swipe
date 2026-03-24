@@ -38,7 +38,6 @@ void ADCResistanceSensor::motionLoop() {
 }
 
 void ADCResistanceSensor::sendData() {
-	networkConnection.sendFlexData(sensorId, m_Data);
 }
 
 }  // namespace SlimeVR::Sensors

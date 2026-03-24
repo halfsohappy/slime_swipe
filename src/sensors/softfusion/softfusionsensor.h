@@ -28,7 +28,6 @@
 #include <cstdint>
 #include <cstring>
 
-#include "../../GlobalVars.h"
 #include "../../sensorinterface/SensorInterface.h"
 #include "../RestCalibrationDetector.h"
 #include "../sensor.h"
@@ -86,18 +85,6 @@ class SoftFusionSensor : public Sensor {
 
 	void sendData() final {
 		Sensor::sendData();
-		sendTempIfNeeded();
-	}
-
-	void sendTempIfNeeded() {
-		uint32_t now = micros();
-		constexpr float maxSendRateHz = 2.0f;
-		constexpr uint32_t sendInterval = 1.0f / maxSendRateHz * 1e6;
-		uint32_t elapsed = now - m_lastTemperaturePacketSent;
-		if (elapsed >= sendInterval) {
-			m_lastTemperaturePacketSent = now - (elapsed - sendInterval);
-			networkConnection.sendTemperature(sensorId, lastReadTemperature);
-		}
 	}
 
 	TemperatureGradientCalculator tempGradientCalculator{[&](float gradient) {
@@ -192,10 +179,6 @@ public:
 			"Sensor timeout I2C Address 0x%02x delaytime: %d ms",
 			addr,
 			now - m_lastRotationUpdateMillis
-		);
-		networkConnection.sendSensorError(
-			this->sensorId,
-			static_cast<uint8_t>(PacketErrorCode::WATCHDOG_TIMEOUT)
 		);
 	}
 

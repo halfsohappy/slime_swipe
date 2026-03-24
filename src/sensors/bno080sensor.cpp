@@ -164,23 +164,19 @@ void BNO080Sensor::motionLoop() {
 				imu.getRawGyro(rX, rY, rZ, gTs);
 				imu.getRawMag(mX, mY, mZ, mTs);
 
-				// only send Data when we have a set of new data
-
-				networkConnection.sendInspectionRawIMUData(
-					sensorId,
-					rX,
-					rY,
-					rZ,
-					rA,
-					aX,
-					aY,
-					aZ,
-					aA,
-					mX,
-					mY,
-					mZ,
-					mA
-				);
+				// Data is read but not sent over network
+				(void)rX;
+				(void)rY;
+				(void)rZ;
+				(void)rA;
+				(void)aX;
+				(void)aY;
+				(void)aZ;
+				(void)aA;
+				(void)mX;
+				(void)mY;
+				(void)mZ;
+				(void)mA;
 			}
 		}
 #endif
@@ -302,7 +298,7 @@ void BNO080Sensor::motionLoop() {
 		uint8_t rr = imu.resetReason();
 		if (rr != lastReset) {
 			lastReset = rr;
-			networkConnection.sendSensorError(this->sensorId, rr);
+			(void)rr;
 		}
 
 		m_Logger.error(
@@ -335,12 +331,6 @@ SensorStatus BNO080Sensor::getSensorState() {
 void BNO080Sensor::sendData() {
 	if (newFusedRotation) {
 		newFusedRotation = false;
-		networkConnection.sendRotationData(
-			sensorId,
-			&fusedRotation,
-			DATA_TYPE_NORMAL,
-			calibrationAccuracy
-		);
 
 #ifdef DEBUG_SENSOR
 		m_Logger.trace("Quaternion: %f, %f, %f, %f", UNPACK_QUATERNION(fusedRotation));
@@ -349,31 +339,16 @@ void BNO080Sensor::sendData() {
 #if SEND_ACCELERATION
 		if (newAcceleration) {
 			newAcceleration = false;
-			networkConnection.sendSensorAcceleration(
-				this->sensorId,
-				this->acceleration
-			);
 		}
 #endif
 	}
 
-	sendTempIfNeeded();
-
 	if (tap != 0) {
-		networkConnection.sendSensorTap(sensorId, tap);
 		tap = 0;
 	}
 }
 
 void BNO080Sensor::sendTempIfNeeded() {
-	uint32_t now = micros();
-	constexpr float maxSendRateHz = 2.0f;
-	constexpr uint32_t sendInterval = 1.0f / maxSendRateHz * 1e6;
-	uint32_t elapsed = now - m_lastTemperaturePacketSent;
-	if (elapsed >= sendInterval) {
-		m_lastTemperaturePacketSent = now - (elapsed - sendInterval);
-		networkConnection.sendTemperature(sensorId, lastReadTemperature);
-	}
 }
 
 void BNO080Sensor::startCalibration(int calibrationType) {

@@ -32,14 +32,6 @@
 #include "boards/boards_default.h"
 // clang-format on
 
-#ifndef SECOND_IMU
-#define SECOND_IMU IMU
-#endif
-
-#ifndef SECOND_IMU_ROTATION
-#define SECOND_IMU_ROTATION IMU_ROTATION
-#endif
-
 #ifndef BATTERY_MONITOR
 #define BATTERY_MONITOR BAT_INTERNAL
 #endif
@@ -48,31 +40,26 @@
 #define SENSOR_INFO_LIST
 #endif
 
-// Experimental features
 #ifndef EXPERIMENTAL_BNO_DISABLE_ACCEL_CALIBRATION
 #define EXPERIMENTAL_BNO_DISABLE_ACCEL_CALIBRATION true
 #endif
 
 #ifndef IMU_USE_EXTERNAL_CLOCK
-#define IMU_USE_EXTERNAL_CLOCK true  // Use external clock for IMU (ICM-45686 only)
+#define IMU_USE_EXTERNAL_CLOCK true
+#endif
+
+#ifndef SECOND_IMU
+#define SECOND_IMU IMU
+#endif
+
+#ifndef SECOND_IMU_ROTATION
+#define SECOND_IMU_ROTATION IMU_ROTATION
 #endif
 
 #ifndef VENDOR_NAME
-#define VENDOR_NAME "Unknown"
-#endif
-
-#ifndef VENDOR_URL
-#define VENDOR_URL ""
+#define VENDOR_NAME "SlimeIMU"
 #endif
 
 #ifndef PRODUCT_NAME
-#define PRODUCT_NAME "DIY SlimeVR Tracker"
-#endif
-
-#ifndef UPDATE_ADDRESS
-#define UPDATE_ADDRESS ""
-#endif
-
-#ifndef UPDATE_NAME
-#define UPDATE_NAME ""
+#define PRODUCT_NAME "SlimeIMU Library"
 #endif

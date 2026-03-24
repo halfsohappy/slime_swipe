@@ -165,21 +165,15 @@ void MPU9250Sensor::motionLoop() {
 		imu.getAcceleration(&aX, &aY, &aZ);
 		imu.getMagnetometer(&mX, &mY, &mZ);
 
-		networkConnection.sendInspectionRawIMUData(
-			sensorId,
-			rX,
-			rY,
-			rZ,
-			255,
-			aX,
-			aY,
-			aZ,
-			255,
-			mX,
-			mY,
-			mZ,
-			255
-		);
+		(void)rX;
+		(void)rY;
+		(void)rZ;
+		(void)aX;
+		(void)aY;
+		(void)aZ;
+		(void)mX;
+		(void)mY;
+		(void)mZ;
 	}
 #endif
 
