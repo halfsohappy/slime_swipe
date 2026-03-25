@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "../../GlobalVars.h"
 #include "../../sensorinterface/SensorInterface.h"
 #include "../RestCalibrationDetector.h"
 #include "../sensor.h"

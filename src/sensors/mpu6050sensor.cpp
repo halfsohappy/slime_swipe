@@ -64,7 +64,7 @@ void MPU6050Sensor::motionSetup() {
 	// Initialize the configuration
 	{
 		SlimeVR::Configuration::SensorConfig sensorCalibration
-			= configuration.getCalibration(sensorId);
+			= configuration.getSensor(sensorId);
 		// If no compatible calibration data is found, the calibration data will just be
 		// zero-ed out
 		switch (sensorCalibration.type) {
@@ -219,7 +219,7 @@ void MPU6050Sensor::startCalibration(int calibrationType) {
 	SlimeVR::Configuration::SensorConfig calibration;
 	calibration.type = SlimeVR::Configuration::SensorConfigType::MPU6050;
 	calibration.data.mpu6050 = m_Config;
-	configuration.setCalibration(sensorId, calibration);
+	configuration.setSensor(sensorId, calibration);
 	configuration.save();
 
 	m_Logger.info("Calibration finished");
