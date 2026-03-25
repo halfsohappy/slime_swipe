@@ -1,124 +1,167 @@
-# SlimeVR Tracker firmware for ESP
+# SlimeIMU
 
-Firmware for ESP8266 / ESP32 microcontrollers and different IMU sensors to use them as a vive-like trackers in VR.
+High-quality IMU sensor fusion library for ESP32, extracted from [SlimeVR](https://slimevr.dev) firmware.
 
-Requires [SlimeVR Server](https://github.com/SlimeVR/SlimeVR-Server) to work with SteamVR and resolve pose. Should be compatible with [owoTrack](https://github.com/abb128/owo-track-driver), but is not guaranteed.
+Get fused orientation quaternions, linear acceleration, and angular velocity from 15+ supported IMUs with automatic detection, VQF sensor fusion, and persistent calibration -- all behind a simple API.
+
+## Features
+
+- **VQF sensor fusion** -- state-of-the-art quaternion filter, better than Mahony/Madgwick for most applications
+- **Automatic IMU detection** via WHOAMI registers -- no need to specify which sensor you have
+- **15 supported IMUs** across software fusion and hardware DMP
+- **Calibration with flash persistence** (LittleFS) -- calibrate once, data survives reboots
+- **Gyroscope temperature compensation** -- drift is corrected as the sensor warms up
+- **I2C and SPI** interfaces, with I2C multiplexer (PCA9547) and GPIO expander (MCP23X17) support
+- **Multi-sensor** -- up to 2 sensors on the same bus with automatic address detection
+
+## Supported IMUs
+
+| IMU | Fusion | Interface | Notes |
+|-----|--------|-----------|-------|
+| BMI160 | Software (VQF) | I2C / SPI | Optional HMC5883L / QMC5883L magnetometer |
+| BMI270 | Software (VQF) | I2C / SPI | Gyro sensitivity auto-calibration (CRT) |
+| ICM-42688 | Software (VQF) | I2C / SPI | |
+| ICM-45605 | Software (VQF) | I2C / SPI | |
+| ICM-45686 | Software (VQF) | I2C / SPI | |
+| LSM6DS3TR-C | Software (VQF) | I2C | |
+| LSM6DSO | Software (VQF) | I2C | |
+| LSM6DSR | Software (VQF) | I2C | |
+| LSM6DSV | Software (VQF) | I2C | |
+| MPU-6050 | Software (VQF) | I2C | Use `IMU_MPU6050_SF` for software fusion variant |
+| BNO055 | Hardware DMP | I2C | Not recommended (BNO080+ is much better) |
+| BNO080 | Hardware DMP | I2C | Good results with internal fusion |
+| BNO085 | Hardware DMP | I2C | Best results with ARVR stabilization |
+| BNO086 | Hardware DMP | I2C | Same as BNO085 |
+| ICM-20948 | Hardware DMP | I2C / SPI | 6DoF or 9DoF mode |
+| MPU-6050 | Hardware DMP | I2C | Legacy DMP mode (`IMU_MPU6050`) |
+| MPU-6500 | Hardware DMP | I2C | Legacy DMP mode |
+| MPU-9250 | Mahony | I2C | Requires magnetometer calibration |
+
+## Installation
+
+### PlatformIO (recommended)
+
+Add to your `platformio.ini`:
+
+```ini
+lib_deps =
+  https://github.com/halfsohappy/slime_swipe.git
+
+build_flags =
+  -DPIN_IMU_SDA=21
+  -DPIN_IMU_SCL=22
+```
+
+### Manual
+
+Clone this repository into your project's `lib/` directory:
+
+```bash
+cd your-project/lib/
+git clone https://github.com/halfsohappy/slime_swipe.git SlimeIMU
+```
+
+## Quick Start
+
+```cpp
+#include <Arduino.h>
+#include <SlimeIMU.h>
+
+SlimeIMU imu;
+
+void setup() {
+    Serial.begin(115200);
+
+    if (!imu.begin(21, 22)) {  // SDA, SCL
+        Serial.println("No IMU found!");
+        while (true) delay(1000);
+    }
+
+    Serial.printf("Detected: %s\n", imu.getSensorName(0));
+}
+
+void loop() {
+    imu.update();
+
+    if (imu.hasNewData(0)) {
+        Quat q = imu.getQuaternion(0);
+        Vector3 accel = imu.getLinearAcceleration(0);
+
+        Serial.printf("w=%.3f x=%.3f y=%.3f z=%.3f  accel: %.2f %.2f %.2f\n",
+                      q.w, q.x, q.y, q.z, accel.x, accel.y, accel.z);
+    }
+}
+```
 
 ## Configuration
 
-Firmware configuration is located in the `defines.h` file. For more information on how to configure your firmware, refer to the [Configuring the firmware project section of SlimeVR documentation](https://docs.slimevr.dev/firmware/configuring-project.html).
+All hardware configuration is done via build flags in `platformio.ini`. The library uses sensible defaults -- you only need to set the pins for your board.
 
-## Compatibility
+### Pin Configuration
 
-The following IMUs and their corresponding `IMU` values are supported by the firmware:
-* BNO085 & BNO086 (IMU_BNO085)
-  * Using any fusion in internal DMP. Best results with ARVR Stabilized Game Rotation Vector or ARVR Stabilized Rotation Vector if in good magnetic environment.
-* BNO080 (IMU_BNO080)
-  * Using any fusion in internal DMP. Doesn't have BNO085's ARVR stabilization, but still gives good results.
-* MPU-6500 (IMU_MPU6500) & MPU-6050 (IMU_MPU6050)
-  * Using internal DMP to fuse Gyroscope and Accelerometer. Can drift substantially.
-  * NOTE: Currently the MPU will auto calibrate when powered on. You *must* place it on the ground and *DO NOT* move it until calibration is complete (for a few seconds). **LED on the ESP will blink 5 times after calibration is over.**
-* BNO055 (IMU_BNO055)
-  * Performs much worse than BNO080, despite having the same hardware. Not recommended for use.
-* MPU-9250 (IMU_MPU9250)
-  * Using Mahony sensor fusion of Gyroscope, Magnetometer and Accelerometer, requires good magnetic environment.
-  * See *Sensor calibration* below for info on calibrating this sensor.
-  * Specify `IMU_MPU6500` in your `defines.h` to use without magnetometer in 6DoF mode.
-  * Experimental support!
-* BMI160 (IMU_BMI160)
-  * Using sensor fusion of Gyroscope and Accelerometer.
-  * **See Sensor calibration** below for info on calibrating this sensor.
-  * Calibration file format is unstable and may not be able to load using newer firmware versions.
-  * Experimental support!
-  * Support for the following magnetometers is implemented (even more experimental): HMC5883L, QMC5883L.
-* ICM-20948 (IMU_ICM20948)
-  * Using fusion in internal DMP for 6Dof or 9DoF, 9DoF mode requires good magnetic environment.
-  * Comment out `USE_6DOF` in `debug.h` for 9DoF mode.
-  * Experimental support!
-* BMI270 (IMU_BMI270), ICM-42688 (IMU_ICM42688), LSM6DS3TR-C (IMU_LSM6DS3TRC), LSM6DSV (IMU_LSM6DSV), LSM6DSO (IMU_LSM6DSO), LSM6DSR (IMU_LSM6DSR), MPU-6050 (IMU_MPU6050_SF)
-  * Using common code: SoftFusionSensor for sensor fusion of Gyroscope and Accelerometer.
-  * Gyro&Accel sample rate, gyroscope offset and 6-side accelerometer calibration supported.
-  * In case of BMI270, gyroscope sensitivity auto-calibration (CRT) is additionally performed.
-  * Support for magnetometers is currently not implemented.
-  * VERY experimental support!
+| Build Flag | Default | Description |
+|---|---|---|
+| `PIN_IMU_SDA` | `21` | I2C data pin |
+| `PIN_IMU_SCL` | `22` | I2C clock pin |
+| `PIN_IMU_INT` | `255` (disabled) | Primary IMU interrupt pin |
+| `PIN_IMU_INT_2` | `255` (disabled) | Secondary IMU interrupt pin |
+| `LED_PIN` | `LED_OFF` | Status LED pin (set to `LED_OFF` to disable) |
 
-Firmware can work with both ESP8266 and ESP32. Please edit `defines.h` and set your pinout properly according to how you connected the IMU.
+### SPI Mode
 
-## Sensor calibration
+Set `PIN_IMU_CS` to a valid GPIO to switch the primary IMU to SPI. The secondary sensor slot always uses I2C.
 
-*It is generally recommended to turn trackers on and let them lay down on a flat surface for a few seconds.** This will calibrate them better.
+```ini
+build_flags =
+  -DPIN_IMU_CS=5
+  -DPIN_SPI_SCK=18       ; optional, omit for board defaults
+  -DPIN_SPI_MISO=19      ; optional
+  -DPIN_SPI_MOSI=23      ; optional
+  -DIMU_SPI_CLOCK=24000000  ; optional, default 24 MHz
+```
 
-**Some trackers require special calibration steps on startup:**
-### MPU-9250
-  * Turn them on with chip facing down. Flip up and put on a surface for a couple of seconds, the LED will light up.
-  * After a few blinks, the LED will light up again
-  * Slowly rotate the tracker in an 8-motion facing different directions for about 30 seconds, while LED is blinking
-  * LED will turn off when calibration is complete
-  * You don't have to calibrate next time you power it on, calibration values will be saved for the next use
+### Sensor Selection
 
-### BMI160
+By default, the library auto-detects sensors (`IMU_AUTO`). To force a specific sensor:
 
-  If you have any problems with this procedure, connect the device via USB and open the serial console to check for any warnings or errors that may indicate hardware problems.
+```ini
+build_flags =
+  -DIMU=IMU_BMI270
+  -DSECOND_IMU=IMU_BMI270
+```
 
-  - **Step 0: Power up with the chip facing down.** Or press the reset/reboot button.
+### Sensor Rotation
 
-    > The LED will be lit continuously. If you have the tracker connected via USB and open the serial console, you will see text prompts in addition to the LEDs. You can only calibrate 1 IMU at a time.
+If your IMU is mounted rotated relative to your project's coordinate frame:
 
-    Flip it back up while the LED is still solid. Wait a few seconds, do not touch the device.
-    
-  - **Step 1: It will flash 3 times when gyroscope calibration begins.**
+```ini
+build_flags =
+  -DIMU_ROTATION=DEG_90         ; DEG_0, DEG_90, DEG_180, DEG_270
+  -DSECOND_IMU_ROTATION=DEG_180
+```
 
-    > If done incorrectly, this step is the most likely source of constant drift.
+## Calibration
 
-    Make sure the tracker does not move or vibrate for 5 seconds - still do not touch it.
+For best results, place the sensor on a flat surface and keep it still for a few seconds after power-on. The library performs automatic rest calibration during this time.
 
-  - **Step 2: It will flash 6 times when accelerometer calibration begins.**
+For full calibration (gyro offset + accelerometer 6-point), see the [calibration example](examples/calibration/main.cpp) and the [Calibration Guide](docs/CALIBRATION.md).
 
-    > The accelerometer calibration process requires you to **hold the device in 6 unique orientations** (e.g. sides of a cube),
-    > keep it still, and not hold or touch for 3 seconds each. It uses gravity as a reference and automatically detects when it is stabilized - this process is not time-sensitive.
+Calibration data is automatically saved to flash (LittleFS) and loaded on subsequent boots.
 
-    > If you are unable to keep it on a flat surface without touching, press the device against a wall, it does not have to be absolutely perfect.
+## Examples
 
-    **There will be two very short blinks when each position is recorded.**
-    
-    Rotate the device 90 or 180 degrees in any direction. It should be on a different side each time. Continue to rotate until all 6 sides have been recorded.
-    
-    The last position has a long flash when recorded, indicating exit from calibration mode.
+| Example | Description |
+|---|---|
+| [basic_imu](examples/basic_imu/main.cpp) | Read orientation and acceleration from a single sensor |
+| [calibration](examples/calibration/main.cpp) | Interactive calibration via serial commands |
+| [multi_sensor](examples/multi_sensor/main.cpp) | Two sensors on the same I2C bus with Euler angle output |
 
-  #### Additional info for BMI160
-  - For best results, **calibrate when the trackers are warmed up** - put them on for a few minutes,
-    wait for the temperature to stabilize at 30-40 degrees C, then calibrate.
-    Enable developer mode in SlimeVR settings to see tracker temperature.
+## API Reference
 
-  - There is a legacy accelerometer calibration method that collects data during in-place rotation by holding it in hand instead.
-    If you are absolutely unable to use the default 6-point calibration method, you can switch it in config file `defines_bmi160.h`.
+See [docs/API.md](docs/API.md) for the full API reference covering all public types and methods.
 
-  - For faster recalibration, you disable accelerometer calibration by setting `BMI160_ACCEL_CALIBRATION_METHOD` option to `ACCEL_CALIBRATION_METHOD_SKIP` in `defines_bmi160.h`.
-    Accelerometer calibration can be safely skipped if you don't have issues with pitch and roll.
-    You can check it by enabling developer mode in SlimeVR settings (*General / Interface*) and going back to the *"Home"* tab.
-    Press *"Preview"* button inside the tracker settings (of each tracker) to show the IMU visualizer.
-    Check if pitch/roll resembles its real orientation.
+## License
 
-  - Calibration data is written to the flash of your MCU and is unique for each BMI160, keep that in mind if you have detachable aux trackers.
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE), at your option.
 
-## Uploading On Linux
-
-Follow the instructions in this link [PlatformIO](https://docs.platformio.org/en/latest//faq.html#platformio-udev-rules), this should solve any permission denied errors
-
-
-## Contributions
-Any contributions submitted for inclusion in this repository will be dual-licensed under
-either:
-
-- MIT License ([LICENSE-MIT](/LICENSE-MIT))
-- Apache License, Version 2.0 ([LICENSE-APACHE](/LICENSE-APACHE))
-
-Unless you explicitly state otherwise, any contribution intentionally submitted for
-inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual
-licensed as above, without any additional terms or conditions.
-
-You also certify that the code you have used is compatible with those licenses or is
-authored by you. If you're doing so on your work time, you certify that your employer is
-okay with this and that you are authorized to provide the above licenses.
-
-For an explanation on how to contribute, see [`CONTRIBUTING.md`](CONTRIBUTING.md)
+Based on [SlimeVR firmware](https://github.com/SlimeVR/SlimeVR-Tracker-ESP) by Eiren Rain & SlimeVR contributors.
