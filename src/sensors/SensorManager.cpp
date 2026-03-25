@@ -28,9 +28,14 @@
 namespace SlimeVR::Sensors {
 
 void SensorManager::setup() {
+#if PIN_IMU_CS == 255
+	// MCP23X17 and I2C port scan are only meaningful in I2C mode.
+	// In SPI mode Wire is not initialised, so calling begin_I2C() or
+	// scani2cports() without an active I2C bus corrupts the heap.
 	if (m_MCP.begin_I2C()) {
 		m_Logger.info("MCP initialized");
 	}
+#endif
 
 	SensorBuilder sensorBuilder = SensorBuilder(this);
 	uint8_t activeSensorCount = sensorBuilder.buildAllSensors();
@@ -41,7 +46,9 @@ void SensorManager::setup() {
 			"Can't find I2C device on provided addresses, scanning for all I2C devices "
 			"in the background"
 		);
+#if PIN_IMU_CS == 255
 		I2CSCAN::scani2cports();
+#endif
 	}
 }
 
