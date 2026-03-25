@@ -86,6 +86,14 @@
 #define PIN_SPI_MOSI 255
 #endif
 
+// BNO08x-specific SPI pins — only needed when using BNO080/085/086 over SPI
+#ifndef PIN_BNO_WAK
+#define PIN_BNO_WAK 255
+#endif
+#ifndef PIN_BNO_RST
+#define PIN_BNO_RST 255
+#endif
+
 #ifndef BATTERY_MONITOR
 #define BATTERY_MONITOR BAT_INTERNAL
 #endif

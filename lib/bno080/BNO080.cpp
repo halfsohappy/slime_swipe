@@ -132,7 +132,9 @@ boolean BNO080::beginSPI(PinInterface* user_CSPin, PinInterface* user_WAKPin, Pi
 	//if(wakeBNO080() == false) //Bring IC out of sleep after reset
 	//  Serial.println("BNO080 did not wake up");
 
-	_spiPort->begin(); //Turn on SPI hardware
+	// SPI bus should already be initialized by the caller (e.g. SlimeIMU::begin)
+	// with any custom pin mappings.  Calling _spiPort->begin() here without pin
+	// arguments would reset ESP32 SPI to default VSPI pins, breaking custom wiring.
 
 	//At system startup, the hub must send its full advertisement message (see 5.2 and 5.3) to the
 	//host. It must not send any other data until this step is complete.

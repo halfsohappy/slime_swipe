@@ -24,12 +24,29 @@
 #include "sensors/bno080sensor.h"
 
 #include "GlobalVars.h"
+#include "sensorinterface/DirectPinInterface.h"
 #include "utils.h"
 
 void BNO080Sensor::motionSetup() {
 #ifdef DEBUG_SENSOR
 	imu.enableDebugging(Serial);
 #endif
+
+#if PIN_IMU_CS != 255
+	// SPI mode — BNO08x needs CS, WAK, INT, RST pins for its SHTP protocol
+	static DirectPinInterface csPin(PIN_IMU_CS);
+	static DirectPinInterface wakPin(PIN_BNO_WAK);
+	static DirectPinInterface rstPin(PIN_BNO_RST);
+	if (!imu.beginSPI(&csPin, &wakPin, m_IntPin, &rstPin, 3000000, SPI)) {
+		m_Logger.fatal(
+			"Can't connect to %s via SPI (CS=%d)",
+			getIMUNameByType(sensorType),
+			PIN_IMU_CS
+		);
+		ledManager.pattern(50, 50, 200);
+		return;
+	}
+#else
 	if (!imu.begin(addr, Wire, m_IntPin)) {
 		m_Logger.fatal(
 			"Can't connect to %s at address 0x%02x",
@@ -39,6 +56,7 @@ void BNO080Sensor::motionSetup() {
 		ledManager.pattern(50, 50, 200);
 		return;
 	}
+#endif
 
 	m_Logger.info(
 		"Connected to %s on 0x%02x. "
