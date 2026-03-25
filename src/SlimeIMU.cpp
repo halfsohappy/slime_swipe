@@ -49,7 +49,10 @@ bool SlimeIMU::begin(const SlimeIMUConfig& config) {
 #endif
 #endif
 
-	// Clear I2C bus in case of stuck state
+#if PIN_IMU_CS == 255
+	// I2C init — only needed when the primary sensor is on I2C (no SPI CS pin).
+	// Skip entirely in SPI mode to avoid touching potentially-invalid I2C pins
+	// and to prevent spurious driver conflicts on ESP32-S3 and similar SoCs.
 	auto clearResult = I2CSCAN::clearBus(config.sdaPin, config.sclPin);
 	if (clearResult != 0) {
 		logger.warn("Can't clear I2C bus, error %d", clearResult);
@@ -68,6 +71,7 @@ bool SlimeIMU::begin(const SlimeIMUConfig& config) {
 	Wire.setTimeOut(150);
 #endif
 	Wire.setClock(config.i2cSpeed);
+#endif // PIN_IMU_CS == 255
 
 	// Wait for IMU to boot
 	delay(500);

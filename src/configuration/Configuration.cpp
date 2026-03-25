@@ -23,50 +23,44 @@
 
 #include "Configuration.h"
 
-#include <LittleFS.h>
-
+#include <Preferences.h>
 #include <cstdint>
 #include <cstring>
 
-#include "../FSHelper.h"
 #include "consts.h"
 #include "sensors/SensorToggles.h"
 #include "utils.h"
 
-#define DIR_CALIBRATIONS "/calibrations"
-#define DIR_TEMPERATURE_CALIBRATIONS "/tempcalibrations"
-#define DIR_TOGGLES_OLD "/toggles"
-#define DIR_TOGGLES "/sensortoggles"
+// NVS namespace (≤15 chars)
+#define PREFS_NS     "slimeimu"
+#define KEY_CFG_VER  "cfg_ver"
+#define KEY_NSENSORS "nsensors"
+
+// Build a per-sensor NVS key.  Sensor index fits in uint8_t so the longest
+// possible key is e.g. "scfg_255" = 8 chars, well within the 15-char limit.
+static void sensorKey(char* buf, const char* prefix, uint8_t id) {
+	snprintf(buf, 16, "%s_%u", prefix, id);
+}
 
 namespace SlimeVR::Configuration {
+
+static Preferences prefs;
+
 void Configuration::setup() {
 	if (m_Loaded) {
 		return;
 	}
 
-	bool status = LittleFS.begin();
-	if (!status) {
-		this->m_Logger.warn("Could not mount LittleFS, formatting");
+	prefs.begin(PREFS_NS, false);
 
-		status = LittleFS.format();
-		if (!status) {
-			this->m_Logger.warn("Could not format LittleFS, aborting");
-			return;
-		}
+	int32_t storedVersion = prefs.getInt(KEY_CFG_VER, -1);
 
-		status = LittleFS.begin();
-		if (!status) {
-			this->m_Logger.error("Could not mount LittleFS, aborting");
-			return;
-		}
-	}
-
-	if (LittleFS.exists("/config.bin")) {
-		m_Logger.trace("Found configuration file");
-
-		auto file = LittleFS.open("/config.bin", "r");
-
-		file.read((uint8_t*)&m_Config.version, sizeof(int32_t));
+	if (storedVersion < 0) {
+		m_Logger.info("No configuration file found, creating new one");
+		m_Config.version = CURRENT_CONFIGURATION_VERSION;
+		save();
+	} else {
+		m_Config.version = storedVersion;
 
 		if (m_Config.version < CURRENT_CONFIGURATION_VERSION) {
 			m_Logger.debug(
@@ -86,14 +80,6 @@ void Configuration::setup() {
 		} else {
 			m_Logger.info("Found up-to-date configuration v%d", m_Config.version);
 		}
-
-		file.seek(0);
-		file.read((uint8_t*)&m_Config, sizeof(DeviceConfig));
-		file.close();
-	} else {
-		m_Logger.info("No configuration file found, creating new one");
-		m_Config.version = CURRENT_CONFIGURATION_VERSION;
-		save();
 	}
 
 	loadSensors();
@@ -108,30 +94,27 @@ void Configuration::setup() {
 }
 
 void Configuration::save() {
-	for (size_t i = 0; i < m_Sensors.size(); i++) {
+	prefs.putInt(KEY_CFG_VER, m_Config.version);
+
+	uint32_t n = (uint32_t)m_Sensors.size();
+	prefs.putUInt(KEY_NSENSORS, n);
+
+	char key[16];
+	for (size_t i = 0; i < n; i++) {
 		SensorConfig config = m_Sensors[i];
 		if (config.type == SensorConfigType::NONE) {
 			continue;
 		}
 
-		char path[17];
-		sprintf(path, DIR_CALIBRATIONS "/%zu", i);
-
 		m_Logger.trace("Saving sensor config data for %d", i);
-
-		File file = LittleFS.open(path, "w");
-		file.write((uint8_t*)&config, sizeof(SensorConfig));
-		file.close();
+		sensorKey(key, "scfg", (uint8_t)i);
+		prefs.putBytes(key, &config, sizeof(SensorConfig));
 
 		if (i < m_SensorToggles.size()) {
-			sprintf(path, DIR_TOGGLES "/%zu", i);
-
 			m_Logger.trace("Saving sensor toggle state for %d", i);
-
-			file = LittleFS.open(path, "w");
+			sensorKey(key, "stog", (uint8_t)i);
 			auto toggleValues = m_SensorToggles[i].getValues();
-			file.write((uint8_t*)&toggleValues, sizeof(SensorToggleValues));
-			file.close();
+			prefs.putBytes(key, &toggleValues, sizeof(SensorToggleValues));
 		} else {
 			m_Logger.trace(
 				"Skipping saving toggles for sensor %d, no toggles present",
@@ -140,33 +123,15 @@ void Configuration::save() {
 		}
 	}
 
-	{
-		File file = LittleFS.open("/config.bin", "w");
-		file.write((uint8_t*)&m_Config, sizeof(DeviceConfig));
-		file.close();
-	}
-
-	// Clean up old toggles directory
-	if (LittleFS.exists(DIR_TOGGLES_OLD)) {
-		char path[17] = DIR_TOGGLES_OLD;
-		char* end = path + strlen(DIR_TOGGLES_OLD);
-		Utils::forEachFile(DIR_TOGGLES_OLD, [&](SlimeVR::Utils::File file) {
-			sprintf(end, "/%s", file.name());
-			LittleFS.remove(path);
-			file.close();
-		});
-		LittleFS.rmdir(DIR_TOGGLES_OLD);
-	}
-
 	m_Logger.debug("Saved configuration");
 }
 
 void Configuration::reset() {
-	LittleFS.format();
+	prefs.clear();
 
 	m_Sensors.clear();
 	m_SensorToggles.clear();
-	m_Config.version = 1;
+	m_Config.version = CURRENT_CONFIGURATION_VERSION;
 	save();
 
 	m_Logger.debug("Reset configuration");
@@ -185,9 +150,7 @@ SensorConfig Configuration::getSensor(size_t sensorID) const {
 }
 
 void Configuration::setSensor(size_t sensorID, const SensorConfig& config) {
-	size_t currentSensors = m_Sensors.size();
-
-	if (sensorID >= currentSensors) {
+	if (sensorID >= m_Sensors.size()) {
 		m_Sensors.resize(sensorID + 1);
 	}
 
@@ -203,9 +166,7 @@ SensorToggleState Configuration::getSensorToggles(size_t sensorId) const {
 }
 
 void Configuration::setSensorToggles(size_t sensorId, SensorToggleState state) {
-	size_t currentSensors = m_SensorToggles.size();
-
-	if (sensorId >= currentSensors) {
+	if (sensorId >= m_SensorToggles.size()) {
 		m_SensorToggles.resize(sensorId + 1);
 	}
 
@@ -213,30 +174,41 @@ void Configuration::setSensorToggles(size_t sensorId, SensorToggleState state) {
 }
 
 void Configuration::eraseSensors() {
+	char key[16];
+	uint32_t n = prefs.getUInt(KEY_NSENSORS, 0);
+	for (uint32_t i = 0; i < n; i++) {
+		sensorKey(key, "scfg", (uint8_t)i);
+		prefs.remove(key);
+		sensorKey(key, "stog", (uint8_t)i);
+		prefs.remove(key);
+	}
+
 	m_Sensors.clear();
-
-	SlimeVR::Utils::forEachFile(DIR_CALIBRATIONS, [&](SlimeVR::Utils::File f) {
-		char path[17];
-		sprintf(path, DIR_CALIBRATIONS "/%s", f.name());
-
-		f.close();
-
-		LittleFS.remove(path);
-	});
-
+	m_SensorToggles.clear();
 	save();
 }
 
 void Configuration::loadSensors() {
-	SlimeVR::Utils::forEachFile(DIR_CALIBRATIONS, [&](SlimeVR::Utils::File f) {
-		SensorConfig sensorConfig;
-		f.read((uint8_t*)&sensorConfig, sizeof(SensorConfig));
+	char key[16];
+	uint32_t n = prefs.getUInt(KEY_NSENSORS, 0);
 
-		uint8_t sensorId = strtoul(f.name(), nullptr, 10);
+	for (uint32_t i = 0; i < n; i++) {
+		sensorKey(key, "scfg", (uint8_t)i);
+		if (!prefs.isKey(key)) {
+			continue;
+		}
+
+		if (prefs.getBytesLength(key) != sizeof(SensorConfig)) {
+			continue;
+		}
+
+		SensorConfig sensorConfig;
+		prefs.getBytes(key, &sensorConfig, sizeof(SensorConfig));
+
 		m_Logger.debug(
 			"Found sensor calibration for %s at index %d",
 			calibrationConfigTypeToString(sensorConfig.type),
-			sensorId
+			i
 		);
 
 		if (sensorConfig.type == SensorConfigType::BNO0XX) {
@@ -245,64 +217,35 @@ void Configuration::loadSensors() {
 				SensorToggles::MagEnabled,
 				sensorConfig.data.bno0XX.magEnabled
 			);
-			setSensorToggles(sensorId, toggles);
+			setSensorToggles(i, toggles);
 		}
 
-		setSensor(sensorId, sensorConfig);
-	});
+		setSensor(i, sensorConfig);
 
-	if (LittleFS.exists(DIR_TOGGLES_OLD)) {
-		SlimeVR::Utils::forEachFile(DIR_TOGGLES_OLD, [&](SlimeVR::Utils::File f) {
-			SensorToggleValues values;
-			// Migration for pre 0.7.0 togglestate, the values started at offset 20 and
-			// there were 3 of them
-			f.seek(20);
-			f.read(reinterpret_cast<uint8_t*>(&values), 3);
+		sensorKey(key, "stog", (uint8_t)i);
+		if (!prefs.isKey(key)) {
+			continue;
+		}
 
-			uint8_t sensorId = strtoul(f.name(), nullptr, 10);
-			m_Logger.debug("Found sensor toggle state at index %d", sensorId);
-
-			setSensorToggles(sensorId, SensorToggleState{values});
-		});
+		SensorToggleValues values{};
+		prefs.getBytes(key, &values, sizeof(SensorToggleValues));
+		m_Logger.debug("Found sensor toggle state at index %d", i);
+		setSensorToggles(i, SensorToggleState{values});
 	}
-
-	SlimeVR::Utils::forEachFile(DIR_TOGGLES, [&](SlimeVR::Utils::File f) {
-		if (f.size() > sizeof(SensorToggleValues)) {
-			return;
-		}
-		SensorToggleValues values;
-		// With the magic of C++ default initialization, the rest of the values should
-		// be their default after reading
-		f.read(reinterpret_cast<uint8_t*>(&values), f.size());
-
-		uint8_t sensorId = strtoul(f.name(), nullptr, 10);
-		m_Logger.debug("Found sensor toggle state at index %d", sensorId);
-
-		setSensorToggles(sensorId, SensorToggleState{values});
-	});
 }
 
 bool Configuration::loadTemperatureCalibration(
 	uint8_t sensorId,
 	GyroTemperatureCalibrationConfig& config
 ) {
-	if (!SlimeVR::Utils::ensureDirectory(DIR_TEMPERATURE_CALIBRATIONS)) {
+	char key[16];
+	sensorKey(key, "tcfg", sensorId);
+
+	if (!prefs.isKey(key)) {
 		return false;
 	}
 
-	char path[32];
-	sprintf(path, DIR_TEMPERATURE_CALIBRATIONS "/%d", sensorId);
-
-	if (!LittleFS.exists(path)) {
-		return false;
-	}
-
-	auto f = SlimeVR::Utils::openFile(path, "r");
-	if (f.isDirectory()) {
-		return false;
-	}
-
-	if (f.size() != sizeof(GyroTemperatureCalibrationConfig)) {
+	if (prefs.getBytesLength(key) != sizeof(GyroTemperatureCalibrationConfig)) {
 		m_Logger.debug(
 			"Found incompatible sensor temperature calibration (size mismatch) "
 			"sensorId:%d, skipping",
@@ -311,22 +254,27 @@ bool Configuration::loadTemperatureCalibration(
 		return false;
 	}
 
-	SensorConfigType storedConfigType;
-	f.read((uint8_t*)&storedConfigType, sizeof(SensorConfigType));
+	// GyroTemperatureCalibrationConfig has no default constructor, so use a raw
+	// buffer to check type compatibility before overwriting caller's config.
+	alignas(GyroTemperatureCalibrationConfig)
+		uint8_t buf[sizeof(GyroTemperatureCalibrationConfig)];
+	prefs.getBytes(key, buf, sizeof(buf));
 
-	if (storedConfigType != config.type) {
+	SensorConfigType storedType;
+	memcpy(&storedType, buf, sizeof(storedType));
+
+	if (storedType != config.type) {
 		m_Logger.debug(
 			"Found incompatible sensor temperature calibration (expected %s, "
 			"found %s) sensorId:%d, skipping",
 			calibrationConfigTypeToString(config.type),
-			calibrationConfigTypeToString(storedConfigType),
+			calibrationConfigTypeToString(storedType),
 			sensorId
 		);
 		return false;
 	}
 
-	f.seek(0);
-	f.read((uint8_t*)&config, sizeof(GyroTemperatureCalibrationConfig));
+	memcpy(&config, buf, sizeof(config));
 	m_Logger.debug(
 		"Found sensor temperature calibration for %s sensorId:%d",
 		calibrationConfigTypeToString(config.type),
@@ -343,15 +291,11 @@ bool Configuration::saveTemperatureCalibration(
 		return false;
 	}
 
-	char path[32];
-	sprintf(path, DIR_TEMPERATURE_CALIBRATIONS "/%d", sensorId);
+	char key[16];
+	sensorKey(key, "tcfg", sensorId);
 
 	m_Logger.trace("Saving temperature calibration data for sensorId:%d", sensorId);
-
-	File file = LittleFS.open(path, "w");
-	file.write((uint8_t*)&config, sizeof(GyroTemperatureCalibrationConfig));
-	file.close();
-
+	prefs.putBytes(key, &config, sizeof(GyroTemperatureCalibrationConfig));
 	m_Logger.debug("Saved temperature calibration data for sensorId:%i", sensorId);
 	return true;
 }
