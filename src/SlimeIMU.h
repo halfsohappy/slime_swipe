@@ -75,6 +75,19 @@
 #include "consts.h"
 #include "sensors/SensorManager.h"
 
+/**
+ * Runtime I2C configuration passed to SlimeIMU::begin().
+ *
+ * SPI is configured at compile time via build_flags, not here.
+ * To use SPI, set these in your platformio.ini build_flags:
+ *   -DPIN_IMU_CS=5              ; CS pin - this alone enables SPI mode
+ *   -DIMU_SPI_CLOCK=24000000    ; optional, default 24 MHz
+ *   -DPIN_SPI_SCK=18            ; optional, omit to use board defaults
+ *   -DPIN_SPI_MISO=19           ; optional
+ *   -DPIN_SPI_MOSI=23           ; optional
+ *
+ * When SPI is active, sdaPin/sclPin still configure the secondary I2C sensor.
+ */
 struct SlimeIMUConfig {
 	uint8_t sdaPin = 21;
 	uint8_t sclPin = 22;
@@ -134,6 +147,16 @@ public:
 	 * Units: m/s²
 	 */
 	Vector3 getLinearAcceleration(size_t sensorIndex) const;
+
+	/**
+	 * Get calibrated angular velocity (gyroscope) for a sensor.
+	 * Returns zero vector if sensor not available.
+	 * Units: rad/s
+	 *
+	 * Supported IMUs: all softfusion sensors (BMI160, BMI270, ICM42688, ICM45xxx,
+	 * LSM6DSx, MPU6050) and BNO0xx hardware fusion sensors.
+	 */
+	Vector3 getAngularVelocity(size_t sensorIndex) const;
 
 	/**
 	 * Get the detected sensor type for a given index.

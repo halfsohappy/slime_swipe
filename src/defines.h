@@ -61,6 +61,31 @@
 #define PIN_IMU_INT_2 255
 #endif
 
+// SPI configuration - setting PIN_IMU_CS to anything other than 255
+// switches the primary IMU to SPI mode.
+// Secondary IMU always uses I2C (PIN_IMU_SDA / PIN_IMU_SCL).
+//
+// Example platformio.ini build_flags:
+//   -DPIN_IMU_CS=5
+//   -DPIN_SPI_MOSI=23 -DPIN_SPI_MISO=19 -DPIN_SPI_SCK=18  ; optional, omit for board defaults
+//   -DIMU_SPI_CLOCK=24000000                                ; optional, 24 MHz default
+#ifndef PIN_IMU_CS
+#define PIN_IMU_CS 255  // 255 = I2C mode (default)
+#endif
+#ifndef IMU_SPI_CLOCK
+#define IMU_SPI_CLOCK 24000000  // 24 MHz
+#endif
+// SPI bus pins - set to 255 to use the board's hardware defaults
+#ifndef PIN_SPI_SCK
+#define PIN_SPI_SCK 255
+#endif
+#ifndef PIN_SPI_MISO
+#define PIN_SPI_MISO 255
+#endif
+#ifndef PIN_SPI_MOSI
+#define PIN_SPI_MOSI 255
+#endif
+
 #ifndef BATTERY_MONITOR
 #define BATTERY_MONITOR BAT_INTERNAL
 #endif
