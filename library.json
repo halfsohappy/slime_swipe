@@ -22,11 +22,35 @@
   "build": {
     "srcFilter": [
       "+<*>",
+      "+<../lib/math>",
+      "+<../lib/bno080>",
+      "+<../lib/i2cdev>",
+      "+<../lib/i2cscan>",
+      "+<../lib/vqf>",
+      "+<../lib/magneto>",
+      "+<../lib/bno055_adafruit>",
+      "+<../lib/mpu6050>",
+      "+<../lib/mpu6050offsetfinder>",
+      "+<../lib/mpu9250>",
+      "+<../lib/ICM20948>",
+      "+<../lib/magnetometers>",
       "-<../examples>"
     ],
     "flags": [
       "-std=gnu++2a",
-      "-O2"
+      "-O2",
+      "-Ilib/math",
+      "-Ilib/bno080",
+      "-Ilib/i2cdev",
+      "-Ilib/i2cscan",
+      "-Ilib/vqf",
+      "-Ilib/magneto",
+      "-Ilib/bno055_adafruit",
+      "-Ilib/mpu6050",
+      "-Ilib/mpu6050offsetfinder",
+      "-Ilib/mpu9250",
+      "-Ilib/ICM20948",
+      "-Ilib/magnetometers"
     ],
     "unflags": [
       "-std=gnu++11",
