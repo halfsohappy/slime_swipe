@@ -6,6 +6,7 @@
 
 #include "SlimeIMU.h"
 
+#include <SPI.h>
 #include <i2cscan.h>
 
 #include "GlobalVars.h"
@@ -38,6 +39,15 @@ bool SlimeIMU::begin(const SlimeIMUConfig& config) {
 
 	// Initialize calibration storage
 	configuration.setup();
+
+#if PIN_IMU_CS != 255
+	// SPI mode - initialize the SPI bus
+#if PIN_SPI_SCK != 255
+	SPI.begin(PIN_SPI_SCK, PIN_SPI_MISO, PIN_SPI_MOSI);
+#else
+	SPI.begin();
+#endif
+#endif
 
 	// Clear I2C bus in case of stuck state
 	auto clearResult = I2CSCAN::clearBus(config.sdaPin, config.sclPin);

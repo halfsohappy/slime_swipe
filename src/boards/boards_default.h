@@ -69,7 +69,30 @@ PIN_IMU_SDA, PRIMARY_IMU_OPTIONAL, BMI160_QMC_REMAP) \
 		DIRECT_PIN(PIN_IMU_INT_2),                   \
 		0                                            \
 	)
+#elif PIN_IMU_CS != 255
+// SPI primary sensor + I2C secondary sensor
+// Set PIN_IMU_CS (and optionally PIN_SPI_SCK/MISO/MOSI, IMU_SPI_CLOCK) in build_flags
+#define SENSOR_DESC_LIST                                         \
+	SENSOR_DESC_ENTRY(                                           \
+		IMU,                                                     \
+		DIRECT_PIN(PIN_IMU_CS),                                  \
+		IMU_ROTATION,                                            \
+		DIRECT_SPI(IMU_SPI_CLOCK, MSBFIRST, SPI_MODE3),          \
+		PRIMARY_IMU_OPTIONAL,                                    \
+		DIRECT_PIN(PIN_IMU_INT),                                 \
+		0                                                        \
+	)                                                            \
+	SENSOR_DESC_ENTRY(                                           \
+		SECOND_IMU,                                              \
+		SECONDARY_IMU_ADDRESS_TWO,                               \
+		SECOND_IMU_ROTATION,                                     \
+		DIRECT_WIRE(PIN_IMU_SCL, PIN_IMU_SDA),                   \
+		SECONDARY_IMU_OPTIONAL,                                  \
+		DIRECT_PIN(PIN_IMU_INT_2),                               \
+		0                                                        \
+	)
 #else
+// Default: both sensors on I2C
 #define SENSOR_DESC_LIST                       \
 	SENSOR_DESC_ENTRY(                         \
 		IMU,                                   \
