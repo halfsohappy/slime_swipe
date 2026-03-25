@@ -80,6 +80,7 @@ public:
 	virtual void setAcceleration(Vector3 a);
 	virtual void setFusedRotation(Quat r);
 	virtual void startCalibration(int calibrationType){};
+	virtual void setAngularVelocity(Vector3 g);
 	virtual SensorStatus getSensorState();
 	virtual void printTemperatureCalibrationState();
 	virtual void printDebugTemperatureCalibrationState();
@@ -97,6 +98,7 @@ public:
 	SensorTypeID getSensorType() { return sensorType; };
 	const Vector3& getAcceleration() { return acceleration; };
 	const Quat& getFusedRotation() { return fusedRotation; };
+	const Vector3& getAngularVelocity() { return angularVelocity; };
 	bool hasNewDataToSend() { return newFusedRotation || newAcceleration; };
 	inline bool hasCompletedRestCalibration() { return restCalibrationComplete; }
 	void setFlag(SensorToggles toggle, bool state);
@@ -139,6 +141,8 @@ protected:
 
 	bool newAcceleration = false;
 	Vector3 acceleration{};
+
+	Vector3 angularVelocity{};
 
 	SensorPosition m_SensorPosition = SensorPosition::POSITION_NO;
 

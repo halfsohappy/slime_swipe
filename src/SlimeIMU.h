@@ -136,6 +136,16 @@ public:
 	Vector3 getLinearAcceleration(size_t sensorIndex) const;
 
 	/**
+	 * Get calibrated angular velocity (gyroscope) for a sensor.
+	 * Returns zero vector if sensor not available.
+	 * Units: rad/s
+	 *
+	 * Supported IMUs: all softfusion sensors (BMI160, BMI270, ICM42688, ICM45xxx,
+	 * LSM6DSx, MPU6050) and BNO0xx hardware fusion sensors.
+	 */
+	Vector3 getAngularVelocity(size_t sensorIndex) const;
+
+	/**
 	 * Get the detected sensor type for a given index.
 	 */
 	SensorTypeID getSensorType(size_t sensorIndex) const;

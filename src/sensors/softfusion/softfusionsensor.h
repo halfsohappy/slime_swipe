@@ -112,6 +112,8 @@ class SoftFusionSensor : public Sensor {
 			   static_cast<sensor_real_t>(xyz[1]),
 			   static_cast<sensor_real_t>(xyz[2])};
 		calibrator.scaleGyroSample(gyroData);
+		// Store calibrated angular velocity (rad/s) before feeding to fusion
+		setAngularVelocity(Vector3(gyroData[0], gyroData[1], gyroData[2]));
 		m_fusion.updateGyro(gyroData, calibrator.getGyroTimestep());
 
 		calibrator.provideGyroSample(xyz);

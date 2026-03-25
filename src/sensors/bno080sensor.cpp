@@ -128,6 +128,8 @@ void BNO080Sensor::motionSetup() {
 	imu.enableStabilityClassifier(500);
 	// enableRawGyro only for reading the Temperature every 1 second (0.5°C steps)
 	imu.enableRawGyro(1000);
+	// Enable calibrated gyro report for angular velocity output (rad/s)
+	imu.enableGyro(10);
 
 	lastReset = 0;
 	lastData = millis();
@@ -184,6 +186,10 @@ void BNO080Sensor::motionLoop() {
 		if (imu.hasNewRawGyro()) {
 			lastReadTemperature = imu.getGyroTemp();
 			imu.resetNewRawGyro();
+		}
+
+		if (imu.hasNewGyro()) {
+			setAngularVelocity(Vector3(imu.getGyroX(), imu.getGyroY(), imu.getGyroZ()));
 		}
 
 		if (!toggles.getToggle(SensorToggles::MagEnabled)) {
