@@ -70,8 +70,11 @@ PIN_IMU_SDA, PRIMARY_IMU_OPTIONAL, BMI160_QMC_REMAP) \
 		0                                            \
 	)
 #elif PIN_IMU_CS != 255
-// SPI primary sensor + I2C secondary sensor
-// Set PIN_IMU_CS (and optionally PIN_SPI_SCK/MISO/MOSI, IMU_SPI_CLOCK) in build_flags
+// SPI primary sensor only.
+// I2C is not initialised in SPI mode; probing Wire with the default
+// PIN_IMU_SCL=22 (invalid on ESP32-S3) causes heap corruption.
+// If you need a secondary I2C sensor alongside a SPI primary, define
+// a custom SENSOR_DESC_LIST before including this header.
 #define SENSOR_DESC_LIST                                         \
 	SENSOR_DESC_ENTRY(                                           \
 		IMU,                                                     \
@@ -80,15 +83,6 @@ PIN_IMU_SDA, PRIMARY_IMU_OPTIONAL, BMI160_QMC_REMAP) \
 		DIRECT_SPI(IMU_SPI_CLOCK, MSBFIRST, SPI_MODE3),          \
 		PRIMARY_IMU_OPTIONAL,                                    \
 		DIRECT_PIN(PIN_IMU_INT),                                 \
-		0                                                        \
-	)                                                            \
-	SENSOR_DESC_ENTRY(                                           \
-		SECOND_IMU,                                              \
-		SECONDARY_IMU_ADDRESS_TWO,                               \
-		SECOND_IMU_ROTATION,                                     \
-		DIRECT_WIRE(PIN_IMU_SCL, PIN_IMU_SDA),                   \
-		SECONDARY_IMU_OPTIONAL,                                  \
-		DIRECT_PIN(PIN_IMU_INT_2),                               \
 		0                                                        \
 	)
 #else
