@@ -41,10 +41,6 @@
 #include "sensorinterface/SPIImpl.h"
 
 bool operator<(const SPISettings& lhs, const SPISettings& rhs);
-bool operator<(const SPIClass& lhs, const SPIClass& rhs);
-
-bool operator<(const SPISettings& lhs, const SPISettings& rhs);
-bool operator<(const SPIClass& lhs, const SPIClass& rhs);
 
 namespace SlimeVR {
 
@@ -106,7 +102,7 @@ private:
 	SensorInterface<I2CWireSensorInterface, int, int> i2cWireInterfaces;
 	SensorInterface<I2CPCASensorInterface, int, int, int, int> pcaWireInterfaces;
 	SensorInterface<Sensors::I2CImpl, uint8_t> i2cImpls;
-	SensorInterface<DirectSPIInterface, SPIClass, SPISettings> directSPIInterfaces;
+	SensorInterface<DirectSPIInterface, SPIClass*, SPISettings> directSPIInterfaces;
 	SensorInterface<Sensors::SPIImpl, DirectSPIInterface*, PinInterface*> spiImpls;
 };
 
