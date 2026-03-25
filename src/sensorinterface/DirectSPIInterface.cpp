@@ -28,8 +28,8 @@
 
 namespace SlimeVR {
 
-DirectSPIInterface::DirectSPIInterface(SPIClass& spiClass, SPISettings spiSettings)
-	: m_spiClass{spiClass}
+DirectSPIInterface::DirectSPIInterface(SPIClass* spiClass, SPISettings spiSettings)
+	: m_spiClass{*spiClass}
 	, m_spiSettings{spiSettings} {}
 
 bool DirectSPIInterface::init() {

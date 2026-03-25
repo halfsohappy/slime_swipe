@@ -32,7 +32,7 @@ namespace SlimeVR {
 
 class DirectSPIInterface : public SensorInterface {
 public:
-	DirectSPIInterface(SPIClass& spiClass, SPISettings spiSettings);
+	DirectSPIInterface(SPIClass* spiClass, SPISettings spiSettings);
 	bool init() final;
 	void swapIn() final;
 

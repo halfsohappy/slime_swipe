@@ -56,7 +56,7 @@ uint8_t SensorBuilder::buildAllSensors() {
 	[[maybe_unused]] const auto DIRECT_SPI
 		= [&](uint32_t clockFreq, uint8_t bitOrder, uint8_t dataMode) {
 			  return interfaceManager.directSPIInterface().get(
-				  SPI,
+				  &SPI,
 				  SPISettings(clockFreq, bitOrder, dataMode)
 			  );
 		  };
