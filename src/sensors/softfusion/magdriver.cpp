@@ -71,6 +71,27 @@ std::vector<MagDefinition> MagDriver::supportedMags{
 				return true;
 			},
 	},
+	MagDefinition{
+		.name = "MMC5983MA",
+
+		.deviceId = 0x30,
+
+		.whoAmIReg = 0x2f,
+		.expectedWhoAmI = 0xff,
+
+		.dataWidth = MagDataWidth::SixByte,
+		.dataReg = 0x00,
+
+		.setup =
+			[](MagInterface& interface) {
+				interface.writeByte(0x09, 0x20);  // CTRL0: SET operation to restore magnetization
+				delay(1);
+				interface.writeByte(0x09, 0x08);  // CTRL0: Auto set/reset enabled
+				interface.writeByte(0x0a, 0x02);  // CTRL1: BW=0b10 (200Hz bandwidth), 16-bit output
+				interface.writeByte(0x0b, 0x8d);  // CTRL2: Cmm_en=1, PRD_SET=1, ODR=0b11 (~50Hz)
+				return true;
+			},
+	},
 };
 
 bool MagDriver::init(MagInterface&& interface, bool supports9ByteMags) {

@@ -23,6 +23,7 @@ Get fused orientation quaternions, linear acceleration, and angular velocity fro
 | ICM-42688 | Software (VQF) | I2C / SPI | |
 | ICM-45605 | Software (VQF) | I2C / SPI | |
 | ICM-45686 | Software (VQF) | I2C / SPI | |
+| ISM330DHCX | Software (VQF) | I2C / SPI | |
 | LSM6DS3TR-C | Software (VQF) | I2C | |
 | LSM6DSO | Software (VQF) | I2C | |
 | LSM6DSR | Software (VQF) | I2C | |
