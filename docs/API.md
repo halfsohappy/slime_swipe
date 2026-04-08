@@ -117,6 +117,8 @@ enum class SensorTypeID : uint8_t {
     LSM6DSR    = 15,
     ICM45686   = 16,
     ICM45605   = 17,
+    ADC_RESISTANCE = 18,
+    ISM330DHCX = 19,
     Empty      = 255
 };
 ```
@@ -523,6 +525,7 @@ Use these with the `IMU` and `SECOND_IMU` build flags:
 | `IMU_ICM42688` | ICM-42688 | Software (VQF) |
 | `IMU_ICM45605` | ICM-45605 | Software (VQF) |
 | `IMU_ICM45686` | ICM-45686 | Software (VQF) |
+| `IMU_ISM330DHCX` | ISM330DHCX | Software (VQF) |
 | `IMU_LSM6DS3TRC` | LSM6DS3TR-C | Software (VQF) |
 | `IMU_LSM6DSO` | LSM6DSO | Software (VQF) |
 | `IMU_LSM6DSR` | LSM6DSR | Software (VQF) |

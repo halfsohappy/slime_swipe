@@ -55,6 +55,7 @@
 #include "softfusion/drivers/icm42688.h"
 #include "softfusion/drivers/icm45605.h"
 #include "softfusion/drivers/icm45686.h"
+#include "softfusion/drivers/ism330dhcx.h"
 #include "softfusion/drivers/lsm6ds3trc.h"
 #include "softfusion/drivers/lsm6dso.h"
 #include "softfusion/drivers/lsm6dsr.h"
@@ -97,6 +98,8 @@ using SoftFusionICM45686
 using SoftFusionICM45605
 	= SoftFusionSensor<SoftFusion::Drivers::ICM45605, SFCALIBRATOR>;
 using SoftFusionBMI160 = SoftFusionSensor<SoftFusion::Drivers::BMI160, SFCALIBRATOR>;
+using SoftFusionISM330DHCX
+	= SoftFusionSensor<SoftFusion::Drivers::ISM330DHCX, SFCALIBRATOR>;
 class SensorAuto {};
 
 struct SensorBuilder {
@@ -220,6 +223,7 @@ public:
 			SoftFusionLSM6DSV,
 			SoftFusionLSM6DSO,
 			SoftFusionLSM6DSR,
+			SoftFusionISM330DHCX,
 			// SoftFusionMPU6050,
 			SoftFusionICM45686,
 			// SoftFusionICM45605
